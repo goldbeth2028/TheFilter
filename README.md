@@ -19,10 +19,22 @@ So the app works two ways that do not depend on anyone's permission:
 
 1. **A filtering feed reader.** Connect open feeds — RSS/Atom, Reddit, Mastodon,
    Bluesky, Hacker News — and read them through the filter.
-2. **A filtering browser.** Navigate to any site — including the ones with no
-   open API — and a content script finds post-like blocks, sends their text to
-   the engine, and covers what it flags, in place, as you scroll. You sign in
-   yourself, in the site's own page.
+2. **A locked-down filtering browser.** A grid of preset destinations — X,
+   Instagram, Reddit, Threads, TikTok, YouTube, Bluesky, Mastodon, and others —
+   each opening into a session confined to that site's own domains. A content
+   script finds post-like blocks, sends their text to the engine, and covers what
+   it flags, in place, as you scroll. You sign in yourself, in the site's page.
+
+   With lockdown on (the default) there is no address bar, and any navigation off
+   the chosen site's domains is refused — including `mailto:`, `tel:`, and
+   `intent://`, which are ways out of the app. The allowlist matches on domain
+   boundaries, so `evil-x.com` and `x.com.attacker.net` both fail against an
+   allowed `x.com`; there are tests pinning exactly that, because an allowlist
+   that matches substrings is decorative.
+
+   **This locks the browser, not the phone.** No ordinary app can stop you
+   leaving it. Guided Access on iOS and screen pinning on Android are the OS
+   features for that, and they are yours to turn on.
 
    It has no per-site selectors. X and Instagram use obfuscated, regenerated
    class names, so anything built on them starts rotting immediately; the script

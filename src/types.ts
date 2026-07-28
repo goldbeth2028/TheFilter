@@ -154,6 +154,12 @@ export interface Settings {
   llmApiKey: string;
   /** Reveal blurred content on tap without the extra confirmation step. */
   quickReveal: boolean;
+  /**
+   * Restrict the browser to the preset sites and block navigation off them.
+   * On by default: an allowlist you opted out of is a choice, one you never
+   * saw is a trap.
+   */
+  lockdownBrowsing: boolean;
 }
 
 export interface SourceConfig {

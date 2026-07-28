@@ -28,6 +28,7 @@ export function FiltersScreen() {
   const setSensitivity = useSettings((s) => s.setSensitivity);
   const setMode = useSettings((s) => s.setMode);
   const toggleSource = useSettings((s) => s.toggleSource);
+  const setLockdownBrowsing = useSettings((s) => s.setLockdownBrowsing);
   const setLlmEnabled = useSettings((s) => s.setLlmEnabled);
   const setLlmApiKey = useSettings((s) => s.setLlmApiKey);
   const mutePhrase = useSettings((s) => s.mutePhrase);
@@ -134,6 +135,28 @@ export function FiltersScreen() {
         <Text style={styles.footnote}>
           The Filter reads the feeds you connect here to sort them. It does not post, follow, or
           share anything on your behalf, and it cannot see inside other apps on your phone.
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <SectionLabel>Browsing</SectionLabel>
+        <Card>
+          <Row
+            title="Only the listed sites"
+            subtitle="Blocks links that lead off the site you opened"
+            right={
+              <Toggle
+                value={settings.lockdownBrowsing}
+                onChange={setLockdownBrowsing}
+                label="Only the listed sites"
+              />
+            }
+          />
+        </Card>
+        <Text style={styles.footnote}>
+          On, the Browse tab has no address bar and refuses navigation away from whichever site you
+          picked. This locks the browser, not the phone — Guided Access on iOS and screen pinning on
+          Android are the tools for that.
         </Text>
       </View>
 
