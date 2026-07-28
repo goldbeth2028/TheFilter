@@ -1,0 +1,166 @@
+/**
+ * Shared domain types.
+ *
+ * The filter layer is deliberately free of any React Native imports so it can be
+ * unit-tested in plain Node (see tests/) and, later, reused by a share extension
+ * or a server-side batch job.
+ */
+
+/** A normalized post from any source (RSS, Reddit, Mastodon, Bluesky, pasted text). */
+export interface Post {
+  id: string;
+  sourceId: string;
+  /** Human label for the origin, e.g. "r/news" or "bsky: @someone". */
+  sourceLabel: string;
+  sourceKind: SourceKind;
+  author?: string;
+  handle?: string;
+  avatarUrl?: string;
+  title?: string;
+  text: string;
+  url?: string;
+  /** Every outbound link found in the post body, in order of appearance. */
+  links: string[];
+  createdAt: number;
+  media?: string[];
+  /** Raw source payload bits worth keeping (score, replies, etc.). */
+  meta?: Record<string, string | number | boolean>;
+}
+
+export type SourceKind = 'rss' | 'reddit' | 'mastodon' | 'bluesky' | 'hackernews' | 'manual';
+
+/** The things this app tries to notice. Every one is user-tunable. */
+export type Category =
+  | 'toxicity'
+  | 'outrage'
+  | 'doom'
+  | 'conspiracy'
+  | 'misinfo'
+  | 'engagementBait';
+
+export const CATEGORIES: Category[] = [
+  'toxicity',
+  'outrage',
+  'doom',
+  'conspiracy',
+  'misinfo',
+  'engagementBait',
+];
+
+/**
+ * Row copy for the Filters screen: a plain label and one line of description,
+ * matching the design doc's grouped-row format. Descriptions are written flat
+ * and factual — no alarm language, per the design rules.
+ */
+export const CATEGORY_META: Record<
+  Category,
+  { label: string; blurb: string; group: 'negativity' | 'credibility' }
+> = {
+  toxicity: {
+    label: 'Hostility',
+    blurb: 'Insults, contempt, and abuse aimed at people',
+    group: 'negativity',
+  },
+  outrage: {
+    label: 'Outrage bait',
+    blurb: 'Framing built to make you angry enough to share',
+    group: 'negativity',
+  },
+  doom: {
+    label: 'Doom framing',
+    blurb: 'Collapse and hopelessness as the default register',
+    group: 'negativity',
+  },
+  conspiracy: {
+    label: 'Conspiracy framing',
+    blurb: 'Hidden-plan narratives and suppressed-knowledge claims',
+    group: 'credibility',
+  },
+  misinfo: {
+    label: 'Unverified claims',
+    blurb: 'Strong claims with nothing to check them against',
+    group: 'credibility',
+  },
+  engagementBait: {
+    label: 'Engagement bait',
+    blurb: 'Manufactured urgency, guilt-sharing, reply farming',
+    group: 'credibility',
+  },
+};
+
+/** One concrete reason the engine reacted, always shown to the user on request. */
+export interface Evidence {
+  detector: string;
+  category: Category;
+  /** Contribution to the category score, 0..1. */
+  weight: number;
+  /** The exact snippet that tripped the detector, for the "Why?" panel. */
+  excerpt?: string;
+  note: string;
+}
+
+export interface Analysis {
+  scores: Record<Category, number>;
+  evidence: Evidence[];
+  /**
+   * 0..1 sourcing/credibility signal built from outbound links, attribution and
+   * hedging. High credibility discounts the `misinfo` and `conspiracy` scores.
+   */
+  credibility: number;
+  /** Highest-scoring category, or undefined when nothing tripped. */
+  topCategory?: Category;
+  topScore: number;
+  /** True when one of the user's own muted phrases matched — overrides scoring. */
+  muted: boolean;
+  /** Whether the LLM second opinion contributed to these numbers. */
+  llmAssisted: boolean;
+}
+
+export type Action = 'allow' | 'label' | 'blur' | 'collapse';
+
+export interface Decision {
+  action: Action;
+  category?: Category;
+  score: number;
+  /** One-line, human-readable justification shown on the shield. */
+  reason: string;
+  /** Set when the bubble guard softened an action to keep the feed honest. */
+  softenedByBubbleGuard?: boolean;
+}
+
+export interface ScreenedPost {
+  post: Post;
+  analysis: Analysis;
+  decision: Decision;
+}
+
+export type FilterMode = 'off' | 'label' | 'balanced' | 'strict';
+
+export interface Settings {
+  mode: FilterMode;
+  /** Per-category sensitivity, 0 (never filter) .. 100 (filter aggressively). */
+  sensitivity: Record<Category, number>;
+  /** Words/phrases the user never wants to see; matched case-insensitively. */
+  mutedPhrases: string[];
+  /** Phrases the user has explicitly forgiven, suppressing evidence that matches. */
+  allowedPhrases: string[];
+  /**
+   * Ceiling on how much of a batch may be hidden, 0..1. Above it, the weakest
+   * hides are downgraded to labels — an anti-echo-chamber guardrail.
+   */
+  maxHiddenRatio: number;
+  /** Use the Claude API for a second opinion on borderline posts. */
+  llmEnabled: boolean;
+  llmApiKey: string;
+  /** Reveal blurred content on tap without the extra confirmation step. */
+  quickReveal: boolean;
+}
+
+export interface SourceConfig {
+  id: string;
+  kind: SourceKind;
+  label: string;
+  /** Subreddit name, instance host, RSS url, bluesky handle, or HN query. */
+  target: string;
+  enabled: boolean;
+}

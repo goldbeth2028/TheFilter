@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "The Filter",
+    "slug": "thefilter",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "thefilter",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0C0E10"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thefilter.app",
+      "infoPlist": {
+        "NSUserActivityTypes": [
+          "INSendMessageIntent"
+        ],
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "thefilter"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "package": "com.thefilter.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0C0E10"
+      },
+      "intentFilters": [
+        {
+          "action": "SEND",
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "text/plain"
+            }
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}
