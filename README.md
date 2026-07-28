@@ -19,8 +19,13 @@ So the app works two ways that do not depend on anyone's permission:
 
 1. **A filtering feed reader.** Connect open feeds — RSS/Atom, Reddit, Mastodon,
    Bluesky, Hacker News — and read them through the filter.
-2. **Check a post.** Paste or share any text from any app and the same engine
+2. **Check a post.** Copy any text from any app, paste it in, and the same engine
    screens it. This covers everything the reader cannot see.
+
+   Share-sheet receiving is *not* built yet. `app.json` declares an Android SEND
+   intent filter and an iOS URL scheme, but no code handles an incoming share —
+   that needs an intent handler on Android and a native share extension on iOS.
+   The clipboard is the working path today.
 
 **It is not a fact-checker.** No algorithm can tell you whether a claim is true.
 What the engine measures is *how a post is written*: whether a strong, specific

@@ -2,9 +2,13 @@
  * "Check a post" — the escape hatch for everything this app cannot read.
  *
  * A third-party app cannot see inside Instagram, TikTok, or X. What it can do is
- * accept text you send it: paste a post, or share it here from any app via the
- * share sheet (see the intent filter in app.json). The same engine that screens
- * the feed screens whatever you hand it.
+ * accept text you hand it, and screen that with the same engine as the feed.
+ *
+ * Today that means the clipboard: copy a post, paste it here. app.json declares
+ * an Android SEND intent filter and an iOS URL scheme, but nothing yet *receives*
+ * a share — that needs an intent handler on Android and a native share extension
+ * on iOS, neither of which is built. Until then the manifest entries are
+ * declarations of intent, not working paths.
  */
 
 import * as Clipboard from 'expo-clipboard';
