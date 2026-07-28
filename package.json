@@ -13,7 +13,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.115.0",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~52.0.28",
     "expo-asset": "~11.0.5",
