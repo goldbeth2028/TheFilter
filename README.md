@@ -19,8 +19,24 @@ So the app works two ways that do not depend on anyone's permission:
 
 1. **A filtering feed reader.** Connect open feeds — RSS/Atom, Reddit, Mastodon,
    Bluesky, Hacker News — and read them through the filter.
-2. **Check a post.** Copy any text from any app, paste it in, and the same engine
-   screens it. This covers everything the reader cannot see.
+2. **A filtering browser.** Navigate to any site — including the ones with no
+   open API — and a content script finds post-like blocks, sends their text to
+   the engine, and covers what it flags, in place, as you scroll. You sign in
+   yourself, in the site's own page.
+
+   It has no per-site selectors. X and Instagram use obfuscated, regenerated
+   class names, so anything built on them starts rotting immediately; the script
+   finds posts structurally instead, and degrades by missing posts rather than by
+   breaking the page. It skips any block containing an input, textarea, or
+   contenteditable field, so composers and login forms are never covered or read.
+
+   **Nothing browsed here is ever sent to the Claude API**, even with the second
+   opinion switched on. A logged-in feed contains direct messages and other
+   people's private posts, which are not the user's alone to hand to a third
+   party. Browsing is scored on device, full stop.
+
+3. **Check a post.** Copy any text from any app, paste it in, and the same engine
+   screens it.
 
    Share-sheet receiving is *not* built yet. `app.json` declares an Android SEND
    intent filter and an iOS URL scheme, but no code handles an incoming share —
@@ -92,8 +108,25 @@ Built to the iOS design doc in `design/the-filter-ios.html`: 402×874pt, 16pt gu
 for state and affirmative action. No red, no alarm language — an app that shouts
 about what it caught is just a second source of alarm.
 
-Three tabs: **Home** (what the filter caught), **Filters** (per-category toggles,
-strength, which feeds they cover), **Feed** (the in-feed label treatment).
+Three tabs from the doc — **Home** (what the filter caught), **Filters**
+(per-category toggles, strength, which feeds they cover), **Feed** (the in-feed
+label treatment) — plus **Browse**, added because a feed reader alone cannot
+reach sites with no open API.
+
+### On shipping the browser tab
+
+Fine for personal use. Note two things before distributing it: Apple's guideline
+4.2 rejects apps that are wrappers around services you don't own, and pointing a
+WebView at a specific platform and modifying its DOM is a "modified client" under
+most platforms' terms. A general-purpose browser that filters whatever you
+navigate to — what this is — sits on much the same footing as an ad blocker or
+reader mode. Per-site X or Instagram adapters would not.
+
+Also worth being clear-eyed about: signing in to a social account inside a
+third-party app's WebView is a habit worth questioning, whoever wrote the app.
+The credentials go to the site in its own page and this app never reads them, but
+you cannot verify that from the outside, and Instagram and Facebook actively
+challenge WebView logins — expect 2FA flows to break.
 
 ## Running it
 

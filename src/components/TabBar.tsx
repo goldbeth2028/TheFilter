@@ -9,12 +9,18 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, TOUCH_TARGET } from '../theme';
 
-export type TabKey = 'home' | 'filters' | 'activity';
+export type TabKey = 'home' | 'filters' | 'activity' | 'browse';
 
-const TABS: Array<{ key: TabKey; label: string; shape: 'square' | 'circle' | 'sharp' }> = [
+/**
+ * The design doc specifies three tabs. Browsing is a fourth, added because the
+ * feed reader alone cannot reach sites that have no open API — the glyph
+ * language extends rather than changes.
+ */
+const TABS: Array<{ key: TabKey; label: string; shape: 'square' | 'circle' | 'sharp' | 'wide' }> = [
   { key: 'home', label: 'Home', shape: 'square' },
   { key: 'filters', label: 'Filters', shape: 'circle' },
   { key: 'activity', label: 'Feed', shape: 'sharp' },
+  { key: 'browse', label: 'Browse', shape: 'wide' },
 ];
 
 export function TabBar({
@@ -49,6 +55,7 @@ export function TabBar({
                   styles.glyph,
                   tab.shape === 'circle' && styles.glyphCircle,
                   tab.shape === 'sharp' && styles.glyphSharp,
+                  tab.shape === 'wide' && styles.glyphWide,
                   { borderColor: selected ? colors.accent : '#6C757D' },
                 ]}
               />
@@ -78,6 +85,7 @@ const styles = StyleSheet.create({
   glyph: { width: 20, height: 20, borderRadius: 6, borderWidth: 2 },
   glyphCircle: { borderRadius: 999 },
   glyphSharp: { borderRadius: 3 },
+  glyphWide: { width: 22, height: 16, borderRadius: 4 },
   label: { fontSize: 10 },
   labelActive: { color: colors.accent, fontWeight: '600' },
   labelInactive: { color: colors.textDim },

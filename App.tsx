@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBar, type TabKey } from './src/components/TabBar';
 import { ActivityScreen } from './src/screens/ActivityScreen';
+import { BrowseScreen } from './src/screens/BrowseScreen';
 import { FiltersScreen } from './src/screens/FiltersScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { InspectScreen } from './src/screens/InspectScreen';
@@ -11,14 +12,20 @@ import { useFeed } from './src/store/feed';
 import { colors } from './src/theme';
 
 /**
- * Three tabs, as designed. Tab switching is plain state rather than a navigation
- * library — the design specifies a custom tab bar and there is no stack to push,
- * so a router would be weight without a job.
+ * The design doc's three tabs, plus Browse. Tab switching is plain state rather
+ * than a navigation library — the design specifies a custom tab bar and there is
+ * no stack to push, so a router would be weight without a job.
  */
 export default function App() {
   const [tab, setTab] = useState<TabKey>('home');
   const [inspecting, setInspecting] = useState(false);
+  const [visitedBrowse, setVisitedBrowse] = useState(false);
   const refresh = useFeed((s) => s.refresh);
+
+  const changeTab = (next: TabKey) => {
+    if (next === 'browse') setVisitedBrowse(true);
+    setTab(next);
+  };
 
   useEffect(() => {
     void refresh();
@@ -49,8 +56,20 @@ export default function App() {
         >
           <ActivityScreen onInspect={() => setInspecting(true)} />
         </View>
+        {/*
+          The browser mounts only once visited. A WebView is expensive and would
+          otherwise start loading a page the user never asked for.
+        */}
+        {visitedBrowse ? (
+          <View
+            style={[styles.screen, tab !== 'browse' && styles.hidden]}
+            pointerEvents={tab === 'browse' ? 'auto' : 'none'}
+          >
+            <BrowseScreen />
+          </View>
+        ) : null}
 
-        <TabBar active={tab} onChange={setTab} />
+        <TabBar active={tab} onChange={changeTab} />
         <InspectScreen visible={inspecting} onClose={() => setInspecting(false)} />
       </View>
     </SafeAreaProvider>
