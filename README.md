@@ -113,6 +113,46 @@ Claude API (`claude-opus-5`, structured output, low effort). Guardrails:
   on-device heuristics, and its reasoning appears in the "Why?" panel.
 - Refusals and API errors degrade to heuristics-only with a visible notice.
 
+## The browser extension
+
+`extension/` is a Manifest V3 extension that filters social sites **in your own
+browser** — Safari on iPhone and macOS, and Chrome/Firefox on desktop. No
+WebView, no logging in through this app, no App Store review problem: you browse
+x.com normally and flagged posts are covered in place.
+
+```sh
+npm run build:extension     # bundles into extension/dist
+npm run verify:extension    # drives it in real Chromium (needs playwright)
+```
+
+Load `extension/dist` as an unpacked extension in Chrome, or wrap it for Safari
+with Apple's converter:
+
+```sh
+xcrun safari-web-extension-converter extension/dist --project-location ./safari
+```
+
+The converter emits an Xcode project, which needs a Mac to build and install —
+that step is the one part of this you cannot do from Windows.
+
+The extension bundles the same engine as the app, so the two can never disagree
+about what is flagged. It never calls the Claude API, whatever the app's setting
+says: a logged-in feed holds direct messages and other people's private posts.
+
+### Detection is verified against real feed markup
+
+`npm run verify:extension` loads synthetic pages shaped like real feeds into
+Chromium and asserts on the result. It currently checks that:
+
+- an X-shaped feed (`article[role="article"]`, obfuscated class names) yields
+  4 posts, of which the miracle-cure and conspiracy posts are covered and the
+  sourced and personal-distress posts are not;
+- a feed built from anonymous `div`s with no ARIA roles at all is still found,
+  via the repetition fallback;
+- a composer is never covered and its text is never read — the `textarea`
+  survives untouched with its contents intact;
+- removal mode actually sets `display: none` on the flagged nodes.
+
 ## Design
 
 Built to the iOS design doc in `design/the-filter-ios.html`: 402×874pt, 16pt gutters,

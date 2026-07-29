@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: #0C0E10; --surface: #14171A; --line: rgba(255,255,255,0.06);
+    --text: #EDEFF1; --dim: #8A9199; --faint: #5C646C; --acc: #6ED7CE;
+    --off: rgba(255,255,255,0.14); --ctrl: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; width: 340px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; padding: 14px;
+  }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .mark { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--acc); display: block; }
+  .name { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .label { font-size: 12px; font-weight: 600; color: var(--dim); letter-spacing: 0.03em; margin: 16px 0 8px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .sep { height: 1px; background: rgba(255,255,255,0.07); margin-left: 12px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; }
+  .txt { flex: 1; min-width: 0; }
+  .t { font-size: 14px; }
+  .s { font-size: 12px; color: var(--dim); margin-top: 2px; line-height: 1.35; }
+  .tog { width: 44px; height: 27px; border-radius: 999px; padding: 2px; border: 0; display: flex; align-items: center; flex: none; cursor: pointer; }
+  .tog.on { background: var(--acc); justify-content: flex-end; }
+  .tog.off { background: var(--off); justify-content: flex-start; }
+  .tog i { width: 23px; height: 23px; border-radius: 999px; display: block; }
+  .tog.on i { background: var(--bg); }
+  .tog.off i { background: var(--dim); }
+  .seg { display: flex; gap: 6px; }
+  .segbtn {
+    flex: 1; height: 36px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--dim); font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .segbtn.sel { background: rgba(110,215,206,0.14); border-color: rgba(110,215,206,0.4); color: var(--acc); font-weight: 600; }
+  .reload {
+    display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 12px;
+    border: 1px solid rgba(110,215,206,0.25); background: rgba(110,215,206,0.06);
+    border-radius: 12px; font-size: 12px; color: var(--dim); line-height: 1.4;
+  }
+  .reloadbtn { flex: none; height: 32px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--ctrl); color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit; }
+  .foot { font-size: 12px; line-height: 1.45; color: var(--faint); margin: 16px 0 0; }
+  button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+</style>
+</head>
+<body><div id="root"></div><script src="popup.js"></script></body>
+</html>

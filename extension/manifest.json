@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "The Filter",
+  "version": "0.1.0",
+  "description": "Covers posts written to provoke, and strong claims with nothing to check them against. Scored on your device.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://*.x.com/*",
+    "https://twitter.com/*",
+    "https://*.twitter.com/*",
+    "https://www.reddit.com/*",
+    "https://old.reddit.com/*",
+    "https://www.instagram.com/*",
+    "https://www.facebook.com/*",
+    "https://m.facebook.com/*",
+    "https://www.threads.net/*",
+    "https://www.threads.com/*",
+    "https://www.tiktok.com/*",
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*",
+    "https://bsky.app/*",
+    "https://mastodon.social/*",
+    "https://news.ycombinator.com/*",
+    "https://lemmy.world/*",
+    "https://www.tumblr.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "The Filter",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://*.x.com/*",
+        "https://twitter.com/*",
+        "https://*.twitter.com/*",
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*",
+        "https://www.instagram.com/*",
+        "https://www.facebook.com/*",
+        "https://m.facebook.com/*",
+        "https://www.threads.net/*",
+        "https://www.threads.com/*",
+        "https://www.tiktok.com/*",
+        "https://www.youtube.com/*",
+        "https://m.youtube.com/*",
+        "https://bsky.app/*",
+        "https://mastodon.social/*",
+        "https://news.ycombinator.com/*",
+        "https://lemmy.world/*",
+        "https://www.tumblr.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

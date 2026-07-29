@@ -10,7 +10,9 @@
     "web": "expo start --web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:extension": "node scripts/build-extension.mjs",
+    "verify:extension": "node scripts/verify-extension.mjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
+    "playwright": "^1.62.0",
     "typescript": "^5.3.3",
     "vitest": "^2.1.8"
   }
