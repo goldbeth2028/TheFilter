@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample feed</title>
+<!--
+  A stand-in page for the simulator's Browse tab.
+
+  It exists because a real site cannot be framed: x.com, instagram.com and the
+  rest send X-Frame-Options, and even without that a cross-origin frame is
+  opaque to the page hosting it. This page is served from the app's own origin,
+  so the genuine injected content script can run in it and the genuine engine
+  can score what it finds. The markup is deliberately anonymous — repeated
+  <article> blocks with meaningless class names — because that is what the
+  detector is built to cope with.
+
+  A composer sits at the top on purpose: the script must never read or cover it.
+-->
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: #0C0E10;
+    color: #C8CDD2;
+    font: 15px/1.5 -apple-system, system-ui, "Segoe UI", sans-serif;
+  }
+  header {
+    position: sticky; top: 0;
+    padding: 12px 16px;
+    background: rgba(12,14,16,0.92);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 13px; color: #5C646C;
+  }
+  main { padding: 12px 12px 60px; display: flex; flex-direction: column; gap: 10px; }
+  .k9x2 {
+    background: #14171A;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .q4bn { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .z7av { width: 30px; height: 30px; border-radius: 999px; background: rgba(255,255,255,0.08); }
+  .m2hd { font-size: 14px; font-weight: 600; color: #EDEFF1; }
+  .m2sub { font-size: 12px; color: #5C646C; }
+  .p1tx { margin: 0; color: #C8CDD2; }
+  .r8ac { display: flex; gap: 18px; margin-top: 10px; font-size: 12px; color: #5C646C; }
+  textarea {
+    width: 100%; min-height: 62px; box-sizing: border-box; resize: vertical;
+    background: #0F1214; color: #EDEFF1; font: inherit;
+    border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; padding: 10px;
+  }
+  .compose-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  button.post { min-height: 34px; padding: 0 16px; border: 0; border-radius: 999px;
+    background: rgba(110,215,206,0.14); color: #6ED7CE; font: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>Sample feed — served from this app's own origin so the simulator can filter it</header>
+
+<main>
+
+  <div class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">You</div><div class="m2sub">Composer</div></div></div>
+    <textarea aria-label="Write a post">Nothing typed here is ever read or covered by the filter — a block containing an input, textarea or contenteditable field is skipped outright, so composers and login forms are left alone.</textarea>
+    <div class="compose-actions"><button class="post" type="button">Post</button></div>
+  </div>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">Harbour Transit</div><div class="m2sub">@harbourtransit · 12m</div></div></div>
+    <p class="p1tx">The transit authority approved the new bus lane on Tuesday. According to the agency report, service should begin in March once the signals are reprogrammed and drivers have finished training. Two council members voted against, citing loading-bay access.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">WellnessTruth</div><div class="m2sub">@wellnesstruth · 24m</div></div></div>
+    <p class="p1tx">Doctors HATE this: one simple root cures cancer in weeks. Big pharma is hiding it because they lose money when you get better. 100% proven, no side effects, works every single time. Nobody in the medical establishment will admit it.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">Marta Ilves</div><div class="m2sub">@marta · 41m</div></div></div>
+    <p class="p1tx">A study published in the journal Nature reports that the new sodium chemistry held 91% of its capacity after 1,000 cycles. The authors note the sample size was small and say the result needs replication before anyone reads too much into it.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">RealTalkDaily</div><div class="m2sub">@realtalkdaily · 1h</div></div></div>
+    <p class="p1tx">WAKE UP. They do not want you to know what is really going on. Do your own research and share this before it gets deleted. The mainstream media will never report it because they are all in on it together.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">Sam</div><div class="m2sub">@sam · 2h</div></div></div>
+    <p class="p1tx">I have been struggling for weeks now and everything feels like far too much to carry. I do not really know what to do next or who else I could talk to about any of it. Writing it down helps a little, so here it is.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">HiddenFacts</div><div class="m2sub">@hiddenfacts · 3h</div></div></div>
+    <p class="p1tx">What they are hiding about the water supply will shock you. This has been suppressed for years and the so-called experts are paid to keep quiet about it. Connect the dots yourself — it is all right there if you are willing to look.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+  <article class="k9x2">
+    <div class="q4bn"><div class="z7av"></div><div><div class="m2hd">City Desk</div><div class="m2sub">@citydesk · 4h</div></div></div>
+    <p class="p1tx">The council has published all 2,140 consultation responses in full, alongside a summary of the objections it received. Officers said the summary was prepared before the deadline and that a revised version will follow once late submissions are logged.</p>
+    <div class="r8ac"><span>Reply</span><span>Repost</span><span>Like</span></div>
+  </article>
+
+</main>
+</body>
+</html>

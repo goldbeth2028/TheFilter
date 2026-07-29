@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Filter — simulator</title>
+<!-- Empty data URI: stops the browser asking for /favicon.ico and logging a 404. -->
+<link rel="icon" href="data:,">
+
+<!--
+  The bezel, and nothing else.
+
+  Everything inside the frame is the real app: the Expo web export of App.tsx and
+  src/**, running the same components the iOS build runs, through react-native-web.
+  This page only draws a 402x874pt phone around it and provides the two controls a
+  simulator needs — reload, and wipe the app's stored state.
+
+  It also seeds the app's persisted source list with the sample feeds served next
+  to it. That is not decoration: a browser cannot fetch NPR's or Reddit's feeds
+  from a page on localhost, because those servers do not send CORS headers, so
+  without local sample feeds the Feed tab would only ever show network errors. On
+  a phone there is no such restriction and the real sources work.
+-->
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #EDEFF1;
+    --dim: #8A9199;
+    --faint: #5C646C;
+    --accent: #6ED7CE;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(1200px 700px at 50% -10%, #16191d 0%, #0A0B0D 60%);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 28px 24px 40px;
+    flex-wrap: wrap;
+  }
+
+  /* ------------------------------------------------------------ the device */
+  #stage { transform-origin: top center; }
+  .device {
+    position: relative;
+    width: 430px;
+    height: 902px;
+    padding: 14px;
+    border-radius: 58px;
+    background: linear-gradient(160deg, #3a3f45 0%, #17191c 26%, #0e1012 60%, #2a2e33 100%);
+    box-shadow: 0 40px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  }
+  .screen {
+    position: relative;
+    width: 402px;
+    height: 874px;
+    border-radius: 46px;
+    overflow: hidden;
+    background: #0C0E10;
+  }
+  .screen iframe { width: 402px; height: 874px; border: 0; display: block; }
+  .island {
+    position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 34px; border-radius: 999px; background: #000;
+    z-index: 5; pointer-events: none;
+  }
+  .statusbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 59px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 30px 0; font-size: 15px; font-weight: 600; color: #EDEFF1;
+    z-index: 4; pointer-events: none;
+  }
+  .statusbar .right { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .battery {
+    width: 22px; height: 11px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.5);
+    position: relative;
+  }
+  .battery::before {
+    content: ''; position: absolute; inset: 1.5px; right: 6px;
+    border-radius: 1px; background: #EDEFF1;
+  }
+  .home-indicator {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 140px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.28);
+    z-index: 5; pointer-events: none;
+  }
+  .btn-side, .btn-vol {
+    position: absolute; width: 3px; border-radius: 3px; background: #2c3136;
+  }
+  .btn-side { right: -3px; top: 210px; height: 96px; }
+  .btn-vol  { left: -3px; top: 178px; height: 56px; }
+  .btn-vol.two { top: 250px; height: 56px; }
+
+  /* ------------------------------------------------------------- the panel */
+  aside { width: 340px; max-width: 100%; padding-top: 6px; }
+  h1 { font-size: 19px; margin: 0 0 2px; letter-spacing: -0.3px; }
+  .sub { color: var(--faint); font-size: 12px; margin: 0 0 18px; }
+  h2 {
+    font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--faint); margin: 20px 0 8px; font-weight: 600;
+  }
+  p { margin: 0 0 10px; color: var(--dim); font-size: 13px; }
+  ul { margin: 0 0 10px; padding-left: 18px; color: var(--dim); font-size: 13px; }
+  li { margin-bottom: 5px; }
+  code { color: var(--ink); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button, select {
+    min-height: 34px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05);
+    color: var(--ink); font: inherit; cursor: pointer;
+  }
+  button:hover, select:hover { background: rgba(255,255,255,0.10); }
+  button.accent { border-color: rgba(110,215,206,0.30); background: rgba(110,215,206,0.12); color: var(--accent); }
+  .status { font-size: 12px; color: var(--faint); min-height: 18px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="device">
+    <div class="btn-vol"></div><div class="btn-vol two"></div><div class="btn-side"></div>
+    <div class="screen">
+      <div class="statusbar"><span id="clock">9:41</span><span class="right"><span>5G</span><span class="battery"></span></span></div>
+      <div class="island"></div>
+      <iframe id="app" title="The Filter" src="about:blank"></iframe>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+
+<aside>
+  <h1>The Filter — simulator</h1>
+  <p class="sub">402 &times; 874pt, the size the design doc is drawn at.</p>
+
+  <div class="controls">
+    <button id="reload" class="accent" type="button">Reload app</button>
+    <button id="reset" type="button">Reset app data</button>
+    <select id="zoom" aria-label="Zoom">
+      <option value="auto">Fit to window</option>
+      <option value="1">100%</option>
+      <option value="0.9">90%</option>
+      <option value="0.75">75%</option>
+      <option value="0.6">60%</option>
+    </select>
+  </div>
+  <div class="status" id="status"></div>
+
+  <h2>What this is</h2>
+  <p>
+    The real app. <code>App.tsx</code>, <code>src/screens</code> and
+    <code>src/components</code> compiled by Expo for web through react-native-web —
+    the same source the iOS build uses. Change a component, run
+    <code>npm run simulator</code>, and the change is here.
+  </p>
+
+  <h2>What it does not reproduce</h2>
+  <ul>
+    <li><strong>The Browse tab has no WebView.</strong> A browser cannot frame
+      x.com or instagram.com — they refuse it — and a cross-origin frame is opaque
+      anyway. Browse shows an explanation and offers a bundled sample page, which
+      the genuine content script and engine do filter end to end.</li>
+    <li><strong>Lockdown navigation blocking is not exercised.</strong> It hangs off
+      a native WebView hook. Its allowlist is covered by <code>tests/browse.test.ts</code>.</li>
+    <li><strong>Feeds are local samples.</strong> Real RSS and Reddit endpoints send
+      no CORS headers, so a browser cannot read them. The phone can.</li>
+    <li><strong>Blur is CSS, not a real iOS blur</strong>, fonts are the browser's,
+      and there is no haptics, share sheet, or clipboard permission prompt.</li>
+    <li><strong>Safe-area insets are faked by this page.</strong> A browser reports
+      them as zero, so the frame pads the app's root by the iPhone 16 Pro's 59pt
+      and 34pt. The app itself is unchanged.</li>
+  </ul>
+
+  <h2>Note</h2>
+  <p>
+    App state lives in this browser's <code>localStorage</code>, exactly as it lives
+    in AsyncStorage on the phone. "Reset app data" clears it and re-seeds the sample
+    feeds.
+  </p>
+</aside>
+
+<script>
+(function () {
+  var STORE_KEY = 'thefilter/settings';
+  var frame = document.getElementById('app');
+  var statusEl = document.getElementById('status');
+
+  function sampleSources() {
+    var base = new URL('sample-feed/', window.location.href).href;
+    return [
+      { id: 'sim-briefing', kind: 'rss', label: 'Sample: Morning Briefing', target: base + 'briefing.xml', enabled: true },
+      { id: 'sim-timeline', kind: 'rss', label: 'Sample: Open Timeline', target: base + 'timeline.xml', enabled: true }
+    ];
+  }
+
+  /* Seeded only when the app has never stored anything, so a session's settings
+     survive a reload the way they would on a phone. */
+  function seedIfEmpty() {
+    try {
+      if (window.localStorage.getItem(STORE_KEY)) return false;
+      window.localStorage.setItem(
+        STORE_KEY,
+        JSON.stringify({ state: { sources: sampleSources() }, version: 1 })
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /*
+    Stand-in safe-area insets.
+
+    react-native-safe-area-context reads `env(safe-area-inset-*)` on web, and a
+    desktop browser reports all four as zero — so without this the app draws from
+    y=0 and the status bar and home indicator sit on top of its content, which is
+    not what it looks like on the phone. Padding the export's own root element by
+    the iPhone 16 Pro's insets puts the content back where the device puts it.
+
+    This is frame chrome, not an app change: the app is not modified, it simply
+    gets the drawing area a phone would give it.
+  */
+  function applyInsets(doc) {
+    var style = doc.createElement('style');
+    style.id = 'simulator-safe-area';
+    style.textContent =
+      'html, body { background: #0C0E10; }' +
+      '#root { box-sizing: border-box; padding-top: 59px; padding-bottom: 34px; }';
+    doc.head.appendChild(style);
+  }
+
+  frame.addEventListener('load', function () {
+    try {
+      var doc = frame.contentDocument;
+      if (doc && !doc.getElementById('simulator-safe-area')) applyInsets(doc);
+    } catch (e) {}
+  });
+
+  function load() {
+    var seeded = seedIfEmpty();
+    statusEl.textContent = seeded ? 'Seeded the sample feeds.' : 'Using stored app data.';
+    frame.src = 'index.html?t=' + Date.now();
+  }
+
+  function tick() {
+    var now = new Date();
+    document.getElementById('clock').textContent =
+      now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+  }
+  tick();
+  setInterval(tick, 20000);
+
+  document.getElementById('reload').addEventListener('click', load);
+
+  document.getElementById('reset').addEventListener('click', function () {
+    try { window.localStorage.clear(); } catch (e) {}
+    load();
+  });
+
+  /* The frame is a fixed 402x874 no matter what; only the whole stage scales. */
+  var zoom = document.getElementById('zoom');
+  function applyZoom() {
+    var value = zoom.value;
+    var scale = value === 'auto'
+      ? Math.min(1, (window.innerHeight - 70) / 902)
+      : parseFloat(value);
+    document.getElementById('stage').style.transform = 'scale(' + scale + ')';
+    document.getElementById('stage').style.height = (902 * scale) + 'px';
+  }
+  zoom.addEventListener('change', applyZoom);
+  window.addEventListener('resize', applyZoom);
+  applyZoom();
+
+  load();
+})();
+</script>
+</body>
+</html>

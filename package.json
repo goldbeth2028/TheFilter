@@ -12,9 +12,14 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "build:extension": "node scripts/build-extension.mjs",
-    "verify:extension": "node scripts/verify-extension.mjs"
+    "verify:extension": "node scripts/verify-extension.mjs",
+    "simulator": "node scripts/build-simulator.mjs && node scripts/serve-simulator.mjs",
+    "simulator:build": "node scripts/build-simulator.mjs",
+    "simulator:serve": "node scripts/serve-simulator.mjs",
+    "verify:simulator": "node scripts/verify-simulator.mjs"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~4.0.1",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~52.0.28",
     "expo-asset": "~11.0.5",
@@ -22,8 +27,10 @@
     "expo-clipboard": "~7.0.1",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-native": "0.76.6",
     "react-native-safe-area-context": "4.12.0",
+    "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
     "zustand": "^5.0.3"
   },

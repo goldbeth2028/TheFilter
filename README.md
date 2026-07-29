@@ -153,6 +153,81 @@ Chromium and asserts on the result. It currently checks that:
   survives untouched with its contents intact;
 - removal mode actually sets `display: none` on the flagged nodes.
 
+## The desktop simulator
+
+Running the app needs an iPhone, or a Mac with Xcode. If you have neither, the
+simulator gets you an operable copy in a desktop browser:
+
+```sh
+npm run simulator          # build, then serve at http://localhost:8080/
+npm run simulator:build    # just build into dist/
+npm run simulator:serve    # just serve an existing build
+npm run verify:simulator   # drive the built simulator in real Chromium
+```
+
+Open `http://localhost:8080/` and the app is there, in an iPhone-shaped frame at
+the design doc's 402×874pt.
+
+**It is the real app, not a mock.** `npm run simulator:build` runs
+`expo export --platform web`, which compiles the same `App.tsx`, `src/screens`
+and `src/components` the iOS bundle compiles, through react-native-web. Edit a
+component, rebuild, and the change is in the frame. `simulator/frame.html` draws
+the bezel and nothing else — it is an iframe host, not an implementation.
+
+### What it does not reproduce
+
+Four things, and it says so on screen rather than pretending otherwise:
+
+- **The Browse tab has no WebView.** `react-native-webview` is a native module;
+  on web `metro.config.js` swaps it for `src/web/WebViewShim.tsx`. The stand-in
+  cannot show x.com or instagram.com — those servers send `X-Frame-Options` and
+  refuse to be framed, and a cross-origin frame is opaque anyway, so the app
+  could not read it to find posts or inject anything into it. What the stand-in
+  does instead is load a **same-origin sample page** (`simulator/sample-feed/`)
+  and run the genuine `INJECTED_SCRIPT` and the genuine engine over it, so post
+  detection, covering, and the Why panel are all exercised end to end.
+- **Lockdown's navigation blocking is not exercised.** It hangs off
+  `onShouldStartLoadWithRequest`, a native hook with no browser equivalent. The
+  allowlist itself is covered by `tests/browse.test.ts`.
+- **Feeds are local samples.** Real RSS and Reddit endpoints send no CORS
+  headers, so a browser cannot read them; the phone can. The frame seeds the
+  app's stored source list with two sample feeds served from the same origin.
+- **Safe-area insets are faked by the frame.** A browser reports them as zero, so
+  `frame.html` pads the export's root element by the iPhone 16 Pro's 59pt and
+  34pt. The app itself is untouched.
+
+Also: blur is CSS `backdrop-filter`, not a real iOS blur; fonts are the
+browser's; there is no haptics and no share sheet. **Check a post** works —
+typing text and pressing "Check it" runs the real engine — but its "Paste"
+button goes through `navigator.clipboard.readText()`, which your browser may
+prompt for or refuse; typing does not depend on it. App state lives in
+`localStorage`, which is where AsyncStorage puts it on web — "Reset app data" in
+the frame clears it.
+
+The native build is unaffected. The web-only module swap is guarded on
+`platform === 'web'`, and `expo export --platform ios` produces a byte-identical
+bundle to the one it produced before the simulator existed.
+
+### Verified in a real browser
+
+`npm run verify:simulator` builds nothing itself — run `simulator:build` first —
+then serves `dist/`, loads it in Chromium at 402×874, and asserts:
+
+- the app mounted with real content and a tab bar carrying all four tabs;
+- each of Home, Filters, Feed and Browse renders its own content, measured
+  against text collected with transparent subtrees skipped (every screen stays
+  mounted, so "is it in the DOM" would prove nothing);
+- the Feed shows posts screened by the real engine, with the covered treatment
+  and its reason;
+- **Check a post** opens over the feed, takes typed text, and returns a verdict;
+- turning **Unverified claims** off in Filters re-screens the Feed — 3 of 14
+  covered becomes 2 of 14 — and the change lands in `localStorage`;
+- Browse says plainly that a real site cannot be framed, and the sample page it
+  offers instead is covered by the engine while the composer is left alone;
+- no console errors and no failed requests.
+
+Screenshots of each tab land in `dist/verify-shots/`.
+
 ## Design
 
 Built to the iOS design doc in `design/the-filter-ios.html`: 402×874pt, 16pt gutters,
@@ -185,9 +260,15 @@ challenge WebView logins — expect 2FA flows to break.
 ```sh
 npm install
 npm start          # Expo dev server; press i / a, or scan with Expo Go
-npm test           # engine + normalization + feed-parser tests (35)
+npm run simulator  # no phone and no Mac? the app in a browser — see above
+npm test           # engine, normalization, feed-parser, browse tests (74)
 npm run typecheck
 ```
+
+`npm run web` starts the Expo dev server for web instead, with fast refresh — the
+same bundle as the simulator but at full window size, with no phone frame around
+it. Useful while iterating on a component; `npm run simulator` is what to use to
+see the app at phone dimensions.
 
 ## Layout
 
@@ -198,7 +279,12 @@ src/
   store/      persisted settings + stats, runtime feed state
   components/ design primitives, post card, why panel, tab bar
   screens/    Home, Filters, Feed, Check-a-post
-tests/        engine, text, sources
+  browse/     preset sites, allowlist, injected content script, bridge protocol
+  extension/  the Manifest V3 content script and popup
+  web/        web-only stand-ins — currently just the WebView, for the simulator
+simulator/    the iPhone frame and its sample feeds (no app code)
+extension/    manifest and build output for the browser extension
+tests/        engine, text, sources, browse
 ```
 
 ## Known limits

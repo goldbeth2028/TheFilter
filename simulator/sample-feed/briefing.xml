@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sample feed for the desktop simulator. Written by hand, served from the same
+  origin as the app, because a browser cannot fetch a real RSS feed cross-origin
+  without the publisher opting in with CORS headers — and almost none do.
+  Nothing here is real reporting; the text exists to exercise the filter.
+-->
+<rss version="2.0">
+  <channel>
+    <title>Sample: Morning Briefing</title>
+    <link>http://localhost/sample-feed/briefing.xml</link>
+    <description>Sample copy for the simulator. Not real reporting.</description>
+
+    <item>
+      <guid>sim-briefing-1</guid>
+      <title>Transit authority approves the Baker Street bus lane</title>
+      <link>https://www.bbc.co.uk/news</link>
+      <pubDate>Mon, 27 Jul 2026 08:10:00 GMT</pubDate>
+      <description>The transit authority approved the new bus lane on Tuesday. According to the agency report, service should begin in March once the signals are reprogrammed and drivers have finished training. Two council members voted against, citing loading-bay access for shops on the north side.</description>
+    </item>
+
+    <item>
+      <guid>sim-briefing-2</guid>
+      <title>Battery study reports 91% capacity after 1,000 cycles</title>
+      <link>https://www.nature.com</link>
+      <pubDate>Mon, 27 Jul 2026 07:40:00 GMT</pubDate>
+      <description>A study published in the journal Nature reports that the new sodium chemistry held 91% of its capacity after 1,000 cycles. The authors note the sample size was small and say the result needs replication before anyone reads too much into it.</description>
+    </item>
+
+    <item>
+      <guid>sim-briefing-3</guid>
+      <title>Rain forecast through Thursday, below February thresholds</title>
+      <link>https://www.metoffice.gov.uk</link>
+      <pubDate>Mon, 27 Jul 2026 06:55:00 GMT</pubDate>
+      <description>Rain is forecast for most of the week, with the heaviest falls expected on Thursday morning. The met office says totals should stay below the thresholds that caused flooding in February, though it cautions that local variation is likely and that the estimate carries a wide margin.</description>
+    </item>
+
+    <item>
+      <guid>sim-briefing-4</guid>
+      <title>Correction: an earlier version misstated the closing date</title>
+      <link>https://www.reuters.com</link>
+      <pubDate>Sun, 26 Jul 2026 19:20:00 GMT</pubDate>
+      <description>An earlier version of this article gave the wrong closing date for the consultation. The correct date is 14 September, according to the department's own published notice. We have updated the piece and are noting the change here.</description>
+    </item>
+
+    <item>
+      <guid>sim-briefing-5</guid>
+      <title>This is absolutely disgusting and everyone involved should be ashamed</title>
+      <link>https://example.com/sample/outrage</link>
+      <pubDate>Sun, 26 Jul 2026 18:05:00 GMT</pubDate>
+      <description>This is absolutely disgusting and everyone involved should be ashamed of themselves. I am furious. How dare they treat ordinary people like this while they laugh all the way to the bank. Share this everywhere until they answer for it.</description>
+    </item>
+
+    <item>
+      <guid>sim-briefing-6</guid>
+      <title>I have been struggling for weeks and it is a lot to carry</title>
+      <link>https://example.com/sample/personal</link>
+      <pubDate>Sun, 26 Jul 2026 15:30:00 GMT</pubDate>
+      <description>I have been struggling for weeks now and everything feels like far too much to carry. I do not really know what to do next or who else I could talk to about any of it. Writing it down helps a little, so here it is.</description>
+    </item>
+  </channel>
+</rss>

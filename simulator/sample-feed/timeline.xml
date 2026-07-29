@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sample feed for the desktop simulator. Deliberately full of the writing the
+  engine is built to catch, so the covered treatment is visible on first load.
+  None of it is a real claim by anyone; it is test copy.
+-->
+<rss version="2.0">
+  <channel>
+    <title>Sample: Open Timeline</title>
+    <link>http://localhost/sample-feed/timeline.xml</link>
+    <description>Sample copy for the simulator. Not real posts.</description>
+
+    <item>
+      <guid>sim-timeline-1</guid>
+      <title>Doctors HATE this: one simple root cures cancer in weeks</title>
+      <link>https://example.com/sample/cure</link>
+      <pubDate>Mon, 27 Jul 2026 09:05:00 GMT</pubDate>
+      <description>Doctors HATE this: one simple root cures cancer in weeks. Big pharma is hiding it because they lose money when you get better. 100% proven, no side effects, works every single time. Nobody in the medical establishment will admit it.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-2</guid>
+      <title>WAKE UP — share this before it gets deleted</title>
+      <link>https://example.com/sample/wakeup</link>
+      <pubDate>Mon, 27 Jul 2026 08:50:00 GMT</pubDate>
+      <description>WAKE UP. They do not want you to know what is really going on. Do your own research and share this before it gets deleted. The mainstream media will never report it because they are all in on it together.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-3</guid>
+      <title>The truth they are covering up about the water supply</title>
+      <link>https://example.com/sample/water</link>
+      <pubDate>Mon, 27 Jul 2026 08:15:00 GMT</pubDate>
+      <description>What they are hiding about the water supply will shock you. This has been suppressed for years and the so-called experts are paid to keep quiet about it. Connect the dots yourself — it is all right there if you are willing to look.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-4</guid>
+      <title>Miracle supplement reverses ageing, doctors baffled</title>
+      <link>https://example.com/sample/supplement</link>
+      <pubDate>Mon, 27 Jul 2026 07:30:00 GMT</pubDate>
+      <description>This miracle supplement reverses ageing and doctors are baffled. Guaranteed to work in 7 days, completely cures the root cause, and the studies proving it have been buried. Nobody is talking about this and that alone should tell you something.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-5</guid>
+      <title>You will NOT believe what happened next</title>
+      <link>https://example.com/sample/bait</link>
+      <pubDate>Mon, 27 Jul 2026 06:45:00 GMT</pubDate>
+      <description>You will NOT believe what happened next. Number 7 will shock you. Like and share if you agree, and comment DONE below. Only 1% of people will read this all the way to the end, so prove me wrong.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-6</guid>
+      <title>Ninety-three percent of people have no idea this is happening</title>
+      <link>https://example.com/sample/stat</link>
+      <pubDate>Sun, 26 Jul 2026 22:00:00 GMT</pubDate>
+      <description>93% of people have no idea this is happening. Ninety-three percent — and nobody in government will say a single word about it. That number alone should tell you everything you need to know about who is running things.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-7</guid>
+      <title>Council publishes the consultation responses in full</title>
+      <link>https://www.theguardian.com</link>
+      <pubDate>Sun, 26 Jul 2026 20:40:00 GMT</pubDate>
+      <description>The council has published all 2,140 consultation responses in full, alongside a summary of the objections it received. Officers said the summary was prepared before the deadline and that a revised version will follow once late submissions are logged.</description>
+    </item>
+
+    <item>
+      <guid>sim-timeline-8</guid>
+      <title>Ferry timetable changes take effect on 1 September</title>
+      <link>https://example.com/sample/ferry</link>
+      <pubDate>Sun, 26 Jul 2026 17:15:00 GMT</pubDate>
+      <description>The operator says the revised ferry timetable takes effect on 1 September, with two additional evening sailings on weekdays and one fewer on Sunday afternoons. Fares are unchanged. The full timetable is on the operator's website.</description>
+    </item>
+  </channel>
+</rss>
