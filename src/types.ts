@@ -160,6 +160,12 @@ export interface Settings {
    * saw is a trap.
    */
   lockdownBrowsing: boolean;
+  /**
+   * In the browser, take flagged posts out of the page entirely instead of
+   * covering them. The count is still reported, so "removed" never means
+   * "silently disappeared" — you always know how many and can turn it off.
+   */
+  browseRemoves: boolean;
 }
 
 export interface SourceConfig {

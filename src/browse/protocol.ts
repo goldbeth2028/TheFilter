@@ -13,6 +13,7 @@ import type { Action } from '../types';
 export type BridgeMessage =
   | { type: 'candidates'; items: Array<{ id: string; text: string }> }
   | { type: 'reveal'; id: string }
+  | { type: 'removed'; count: number }
   | { type: 'nav'; url: string; title: string }
   | { type: 'why'; id: string };
 
@@ -22,6 +23,12 @@ export interface Verdict {
   action: Action;
   label: string;
   reason: string;
+  /**
+   * Take the post out of the page rather than covering it. Set per-request from
+   * the user's setting, not decided by the engine — the engine's job is to say
+   * how bad a post is, not how forcefully to act on it.
+   */
+  remove?: boolean;
 }
 
 const MAX_ITEMS = 60;
@@ -61,6 +68,10 @@ export function parseBridgeMessage(raw: string): BridgeMessage | undefined {
     }
     case 'reveal':
       return typeof message.id === 'string' ? { type: 'reveal', id: message.id } : undefined;
+    case 'removed':
+      return typeof message.count === 'number' && Number.isFinite(message.count)
+        ? { type: 'removed', count: Math.max(0, Math.min(500, Math.floor(message.count))) }
+        : undefined;
     case 'why':
       return typeof message.id === 'string' ? { type: 'why', id: message.id } : undefined;
     case 'nav':

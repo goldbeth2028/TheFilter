@@ -27,6 +27,7 @@ export const INJECTED_SCRIPT = `
   var seq = 0;
   var pending = null;
   var known = {};
+  var removedCount = 0;
 
   var style = document.createElement('style');
   style.textContent = [
@@ -156,9 +157,20 @@ export const INJECTED_SCRIPT = `
       if (!el || !el.parentNode) continue;
       if (v.action === 'allow') continue;
       if (v.action === 'label') { addLabel(el, v); continue; }
+      if (v.remove) { strip(el); continue; }
       cover(el, v);
     }
   };
+
+  /* Take the post out of the page. The count goes back to the app so the user
+     is told how many vanished — removal must never mean unaccounted-for. */
+  function strip(el) {
+    if (el.__tfRemoved) return;
+    el.__tfRemoved = true;
+    el.style.setProperty('display', 'none', 'important');
+    removedCount++;
+    send({ type: 'removed', count: removedCount });
+  }
 
   function addLabel(el, v) {
     if (el.__tfLabelled) return;

@@ -64,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
   llmApiKey: '',
   quickReveal: false,
   lockdownBrowsing: true,
+  browseRemoves: false,
 };
 
 function emptyScores(): Record<Category, number> {

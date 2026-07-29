@@ -80,6 +80,7 @@ interface SettingsState {
   setMaxHiddenRatio: (value: number) => void;
   setQuickReveal: (value: boolean) => void;
   setLockdownBrowsing: (value: boolean) => void;
+  setBrowseRemoves: (value: boolean) => void;
   setLlmEnabled: (value: boolean) => void;
   setLlmApiKey: (value: string) => void;
   mutePhrase: (phrase: string) => void;
@@ -119,6 +120,8 @@ export const useSettings = create<SettingsState>()(
       setQuickReveal: (value) => set((s) => ({ settings: { ...s.settings, quickReveal: value } })),
       setLockdownBrowsing: (value) =>
         set((s) => ({ settings: { ...s.settings, lockdownBrowsing: value } })),
+      setBrowseRemoves: (value) =>
+        set((s) => ({ settings: { ...s.settings, browseRemoves: value } })),
       setLlmEnabled: (value) => set((s) => ({ settings: { ...s.settings, llmEnabled: value } })),
       setLlmApiKey: (value) => set((s) => ({ settings: { ...s.settings, llmApiKey: value.trim() } })),
 

@@ -173,3 +173,35 @@ describe('site presets', () => {
     expect(monogram('Bluesky')).toBe('BL');
   });
 });
+
+describe('removal path', () => {
+  it('carries the remove flag through to the page', () => {
+    const call = buildApplyCall([
+      { id: 'tf1', action: 'blur', label: 'Filtered', reason: 'r', remove: true },
+    ]);
+    expect(call).toContain('"remove":true');
+  });
+
+  it('accepts a removal count and clamps a hostile one', () => {
+    expect(parseBridgeMessage(JSON.stringify({ type: 'removed', count: 3 }))).toEqual({
+      type: 'removed',
+      count: 3,
+    });
+    expect(parseBridgeMessage(JSON.stringify({ type: 'removed', count: 9e9 }))).toEqual({
+      type: 'removed',
+      count: 500,
+    });
+    expect(parseBridgeMessage(JSON.stringify({ type: 'removed', count: -4 }))).toEqual({
+      type: 'removed',
+      count: 0,
+    });
+    expect(parseBridgeMessage(JSON.stringify({ type: 'removed' }))).toBeUndefined();
+    expect(parseBridgeMessage(JSON.stringify({ type: 'removed', count: 'lots' }))).toBeUndefined();
+  });
+
+  it('reports every removal back to the app, so none is silent', () => {
+    // If this ever stops holding, posts vanish with no count and the user has
+    // no way to know the filter acted.
+    expect(INJECTED_SCRIPT).toContain("send({ type: 'removed', count: removedCount })");
+  });
+});

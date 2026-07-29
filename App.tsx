@@ -17,9 +17,11 @@ import { colors } from './src/theme';
  * no stack to push, so a router would be weight without a job.
  */
 export default function App() {
-  const [tab, setTab] = useState<TabKey>('home');
+  // Opens on Browse: the social sites are the reason most people install this,
+  // and a launcher is a more useful first screen than a summary of nothing.
+  const [tab, setTab] = useState<TabKey>('browse');
   const [inspecting, setInspecting] = useState(false);
-  const [visitedBrowse, setVisitedBrowse] = useState(false);
+  const [visitedBrowse, setVisitedBrowse] = useState(true);
   const refresh = useFeed((s) => s.refresh);
 
   const changeTab = (next: TabKey) => {

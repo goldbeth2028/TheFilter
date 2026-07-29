@@ -62,12 +62,14 @@ export function BrowseScreen() {
   const [pageTitle, setPageTitle] = useState('');
   const [covered, setCovered] = useState(0);
   const [blocked, setBlocked] = useState<string | undefined>();
+  const [removed, setRemoved] = useState(0);
   const [freeAddress, setFreeAddress] = useState('');
   const [explaining, setExplaining] = useState<ScreenedPost | undefined>();
 
   const open = useCallback((next: SiteOption, startUrl?: string) => {
     screened.current.clear();
     setCovered(0);
+    setRemoved(0);
     setBlocked(undefined);
     setPageTitle(next.name);
     setUrl(startUrl ?? next.url);
@@ -113,6 +115,10 @@ export function BrowseScreen() {
           recordReveal();
           return;
 
+        case 'removed':
+          setRemoved(message.count);
+          return;
+
         case 'why': {
           const item = screened.current.get(message.id);
           if (item) setExplaining(item);
@@ -139,6 +145,9 @@ export function BrowseScreen() {
                 ? `Filtered — ${CATEGORY_META[category].label.toLowerCase()}`
                 : 'Filtered',
               reason: result.decision.reason,
+              remove:
+                settings.browseRemoves &&
+                (result.decision.action === 'blur' || result.decision.action === 'collapse'),
             };
           });
 
@@ -163,8 +172,11 @@ export function BrowseScreen() {
 
   const status = useMemo(() => {
     if (settings.mode === 'off') return 'Filter off';
+    // Removal is reported, never silent. A post taken out of the page still
+    // shows up in this count, so the user always knows it happened.
+    if (settings.browseRemoves) return removed === 0 ? 'Filter on' : `${removed} removed`;
     return covered === 0 ? 'Filter on' : `${covered} covered`;
-  }, [settings.mode, covered]);
+  }, [settings.mode, settings.browseRemoves, covered, removed]);
 
   if (!site) {
     return (

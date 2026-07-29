@@ -29,6 +29,7 @@ export function FiltersScreen() {
   const setMode = useSettings((s) => s.setMode);
   const toggleSource = useSettings((s) => s.toggleSource);
   const setLockdownBrowsing = useSettings((s) => s.setLockdownBrowsing);
+  const setBrowseRemoves = useSettings((s) => s.setBrowseRemoves);
   const setLlmEnabled = useSettings((s) => s.setLlmEnabled);
   const setLlmApiKey = useSettings((s) => s.setLlmApiKey);
   const mutePhrase = useSettings((s) => s.mutePhrase);
@@ -152,11 +153,29 @@ export function FiltersScreen() {
               />
             }
           />
+          <Separator />
+          <Row
+            title="Take flagged posts out"
+            subtitle="Removes them from the page instead of covering them"
+            right={
+              <Toggle
+                value={settings.browseRemoves}
+                onChange={setBrowseRemoves}
+                label="Take flagged posts out"
+              />
+            }
+          />
         </Card>
         <Text style={styles.footnote}>
-          On, the Browse tab has no address bar and refuses navigation away from whichever site you
-          picked. This locks the browser, not the phone — Guided Access on iOS and screen pinning on
-          Android are the tools for that.
+          Lockdown gives the Browse tab no address bar and refuses navigation away from whichever
+          site you opened. This locks the browser, not the phone — Guided Access on iOS and screen
+          pinning on Android are the tools for that.
+        </Text>
+        <Text style={styles.footnote}>
+          Taking posts out is the firmer option: they are gone from the feed, with no cover to tap.
+          The header still counts them, so you always know how many — but you cannot get one back
+          without switching this off and reloading. Covering keeps that door open, which is why it
+          is the default.
         </Text>
       </View>
 
