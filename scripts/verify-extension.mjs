@@ -61,6 +61,25 @@ const composerFeed = page('Composer', `
   ${[NASTY, BENIGN].map((t) => `<article role="article"><div>${t}</div></article>`).join('')}
 </main>`);
 
+/* Shaped like Instagram: an <article> per post with an "Add a comment" form
+   inside each one. That trailing form is why this fixture exists — the old
+   "skip any block containing a field" rule found nothing at all here, so the
+   extension silently filtered nothing on the site people most want filtered. */
+const igFeed = page('Instagram-like', `
+<main role="main">
+  ${[BENIGN, NASTY, CONSPIRACY, DISTRESS].map((t, i) => `
+  <article class="_aatb x1yztbdb">
+    <header class="_aaqy"><div class="_aar0"></div><a class="_acan">account.${i}</a><div role="button">More</div></header>
+    <div class="_aagv" style="height:120px;background:#eee"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div></section>
+    <div class="_aacl">1,204 likes</div>
+    <div class="_a9zs"><span class="_aaco">account.${i}</span><span class="_ap3a">${t}</span></div>
+    <div class="_a9zr"><a class="_a9zc">View all 128 comments</a></div>
+    <time class="_aaqe">2 HOURS AGO</time>
+    <section class="_aasa"><form method="POST"><textarea placeholder="Add a comment…"></textarea><button>Post</button></form></section>
+  </article>`).join('')}
+</main>`);
+
 const browser = await chromium.launch({ executablePath: CHROME });
 const errors = [];
 let failures = 0;
@@ -97,6 +116,11 @@ await run('Div-only feed (repetition fallback)', divFeed, (r) =>
 
 await run('Composer is never touched', composerFeed, (r) =>
   r.textareaCovered === false && r.textareaIntact === NASTY.length && r.covered === 1);
+
+await run('Instagram-shaped feed (comment form inside every post)', igFeed, (r) =>
+  r.found === 4 && r.covered === 2 && r.textareaCovered === false &&
+  r.shields.some((s) => s.includes('unverified claims')) &&
+  r.shields.some((s) => s.includes('conspiracy')));
 
 /* Removal mode */
 const p = await browser.newPage({ viewport: { width: 420, height: 900 } });

@@ -38,6 +38,7 @@ const bundle = readFileSync(path.join(bundlePath, jsFiles[0]), 'utf8');
 const briefing = readFileSync(path.join(dist, 'sample-feed/briefing.xml'), 'utf8');
 const timeline = readFileSync(path.join(dist, 'sample-feed/timeline.xml'), 'utf8');
 const samplePage = readFileSync(path.join(dist, 'sample-feed/index.html'), 'utf8');
+const instagramPage = readFileSync(path.join(dist, 'sample-feed/instagram.html'), 'utf8');
 
 /** `</script>` inside a string literal would end the tag early. */
 const safe = (s) => JSON.stringify(s).replace(/<\/script/gi, '<\\/script');
@@ -188,7 +189,7 @@ const html = `<title>The Filter — running app</title>
       <div class="card limits">
         <h2>What this is not</h2>
         <p><b>Not an iOS simulator.</b> Your browser is drawing this, not iOS. Fonts, scroll physics and blur are approximations — the tab bar blur in particular is CSS, where the phone uses a native one.</p>
-        <p><b>No real WebView.</b> Browse cannot load x.com: the site refuses framing, and a cross-origin frame is opaque to script anyway. It explains that and offers a bundled sample page instead.</p>
+        <p><b>No real WebView.</b> Browse cannot load instagram.com or x.com: those sites send <code>X-Frame-Options</code> to refuse framing, and a cross-origin frame is opaque to script anyway. Each tile explains that and offers a bundled replica of the same DOM shape — Instagram's has its per-post comment form, which is what post detection has to cope with.</p>
         <p><b>No server.</b> A single file has none, so this page answers the app's two sample-feed requests from strings baked into it. Everything else — the engine, the screening, the storage — is the real code path.</p>
       </div>
     </aside>
@@ -202,7 +203,16 @@ const html = `<title>The Filter — running app</title>
     'briefing.xml': ${safe(briefing)},
     'timeline.xml': ${safe(timeline)}
   };
-  var SAMPLE_PAGE = ${safe(samplePage)};
+  /* Keyed by filename so Browse's Instagram tile gets the Instagram-shaped
+     replica and everything else gets the generic timeline. */
+  var PAGES = {
+    'instagram.html': ${safe(instagramPage)},
+    'index.html': ${safe(samplePage)}
+  };
+  function pageFor(url) {
+    for (var file in PAGES) if (url.indexOf('sample-feed/' + file) !== -1) return PAGES[file];
+    return PAGES['index.html'];
+  }
 
   /* Seed the sample feeds the way the local simulator's frame does. Without
      this the app boots with its real default sources and tries to fetch NPR and
@@ -235,7 +245,7 @@ const html = `<title>The Filter — running app</title>
       }
     }
     if (url.indexOf('sample-feed/') !== -1) {
-      return Promise.resolve(new Response(SAMPLE_PAGE, { status: 200, headers: { 'Content-Type': 'text/html' } }));
+      return Promise.resolve(new Response(pageFor(url), { status: 200, headers: { 'Content-Type': 'text/html' } }));
     }
     if (!realFetch) return Promise.reject(new Error('offline preview'));
     return realFetch(input, init);
@@ -253,7 +263,7 @@ const html = `<title>The Filter — running app</title>
       get: iframeSrc.get,
       set: function (value) {
         if (typeof value === 'string' && value.indexOf('sample-feed/') !== -1) {
-          this.srcdoc = SAMPLE_PAGE;
+          this.srcdoc = pageFor(value);
           return;
         }
         iframeSrc.set.call(this, value);
@@ -263,7 +273,7 @@ const html = `<title>The Filter — running app</title>
   var realSetAttribute = HTMLIFrameElement.prototype.setAttribute;
   HTMLIFrameElement.prototype.setAttribute = function (name, value) {
     if (name === 'src' && typeof value === 'string' && value.indexOf('sample-feed/') !== -1) {
-      return realSetAttribute.call(this, 'srcdoc', SAMPLE_PAGE);
+      return realSetAttribute.call(this, 'srcdoc', pageFor(value));
     }
     return realSetAttribute.call(this, name, value);
   };
@@ -272,7 +282,7 @@ const html = `<title>The Filter — running app</title>
     var src = frame.getAttribute('src') || '';
     if (src.indexOf('sample-feed/') === -1) return;
     frame.removeAttribute('src');
-    frame.setAttribute('srcdoc', SAMPLE_PAGE);
+    frame.setAttribute('srcdoc', pageFor(src));
   }
   new MutationObserver(function (records) {
     records.forEach(function (record) {

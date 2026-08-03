@@ -39,8 +39,12 @@ So the app works two ways that do not depend on anyone's permission:
    It has no per-site selectors. X and Instagram use obfuscated, regenerated
    class names, so anything built on them starts rotting immediately; the script
    finds posts structurally instead, and degrades by missing posts rather than by
-   breaking the page. It skips any block containing an input, textarea, or
-   contenteditable field, so composers and login forms are never covered or read.
+   breaking the page. It tells a post from a composer by where the words are:
+   text inside a field belongs to whoever is typing it and is never read or
+   scored, text outside one is the post. That distinction matters more than it
+   sounds — Instagram puts an "Add a comment" form inside every feed article, so
+   the blunter "skip anything containing a field" rule found nothing there at
+   all. Whatever block currently holds the caret is left alone unconditionally.
 
    **Nothing browsed here is ever sent to the Claude API**, even with the second
    opinion switched on. A logged-in feed contains direct messages and other
@@ -147,6 +151,9 @@ Chromium and asserts on the result. It currently checks that:
 - an X-shaped feed (`article[role="article"]`, obfuscated class names) yields
   4 posts, of which the miracle-cure and conspiracy posts are covered and the
   sourced and personal-distress posts are not;
+- an Instagram-shaped feed, where every post is an `<article>` with an
+  "Add a comment" form inside it, yields 4 posts with the same two covered and
+  no comment box touched;
 - a feed built from anonymous `div`s with no ARIA roles at all is still found,
   via the repetition fallback;
 - a composer is never covered and its text is never read — the `textarea`
@@ -163,6 +170,7 @@ npm run simulator          # build, then serve at http://localhost:8080/
 npm run simulator:build    # just build into dist/
 npm run simulator:serve    # just serve an existing build
 npm run verify:simulator   # drive the built simulator in real Chromium
+npm run verify:detector    # run the WebView content script against real DOM shapes
 ```
 
 Open `http://localhost:8080/` and the app is there, in an iPhone-shaped frame at
@@ -183,9 +191,12 @@ Four things, and it says so on screen rather than pretending otherwise:
   cannot show x.com or instagram.com — those servers send `X-Frame-Options` and
   refuse to be framed, and a cross-origin frame is opaque anyway, so the app
   could not read it to find posts or inject anything into it. What the stand-in
-  does instead is load a **same-origin sample page** (`simulator/sample-feed/`)
-  and run the genuine `INJECTED_SCRIPT` and the genuine engine over it, so post
-  detection, covering, and the Why panel are all exercised end to end.
+  does instead is load a **same-origin replica** (`simulator/sample-feed/`) and
+  run the genuine `INJECTED_SCRIPT` and the genuine engine over it, so post
+  detection, covering, and the Why panel are all exercised end to end. The
+  Instagram tile gets `instagram.html`, which copies Instagram's DOM shape —
+  an `<article>` per post with a comment form inside it — rather than its
+  appearance; it carries no wordmark and says what it is at the top.
 - **Lockdown's navigation blocking is not exercised.** It hangs off
   `onShouldStartLoadWithRequest`, a native hook with no browser equivalent. The
   allowlist itself is covered by `tests/browse.test.ts`.

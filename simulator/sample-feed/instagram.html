@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instagram-shaped replica</title>
+<!--
+  A structural replica of an Instagram feed, for the Browse tab.
+
+  It is not Instagram and does not try to look like it: no wordmark, no brand
+  colours, and a banner at the top saying what it is. What it copies is the
+  part that matters to the filter — the DOM shape. Instagram builds each feed
+  post as an <article> that contains, in order, a header, media, an action row,
+  a like count, the caption, a "view all comments" link, a timestamp, and an
+  "Add a comment" <form>.
+
+  That trailing form is the whole reason this file exists. The detector used to
+  skip any block containing a field, which meant every Instagram post in the
+  world was invisible to it. This page is the regression test for the fix, and
+  the thing you can actually watch get filtered in the browser preview.
+
+  Class names are the real obfuscated ones in spirit — meaningless and unstable
+  — because the detector must never depend on them.
+-->
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: #000;
+    color: #F5F5F5;
+    font: 14px/1.45 -apple-system, system-ui, "Segoe UI", sans-serif;
+  }
+  .banner {
+    position: sticky; top: 0; z-index: 5;
+    padding: 10px 14px;
+    background: #0C0E10;
+    border-bottom: 1px solid rgba(255,255,255,0.09);
+    font-size: 11px; line-height: 1.45; color: #8A9199;
+  }
+  .banner b { color: #6ED7CE; font-weight: 600; }
+  main { padding: 0 0 70px; display: flex; flex-direction: column; }
+  ._aatb {
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    padding-bottom: 6px;
+  }
+  ._aaqy { display: flex; align-items: center; gap: 10px; padding: 11px 14px; }
+  ._aar0 { width: 30px; height: 30px; border-radius: 999px; background: rgba(255,255,255,0.11); flex: none; }
+  ._acan { font-size: 13px; font-weight: 600; color: #F5F5F5; }
+  .x1lliihq { font-size: 13px; color: #8A9199; }
+  ._aaqy [role="button"] { margin-left: auto; color: #8A9199; font-size: 16px; letter-spacing: 2px; }
+  ._aagv { height: 190px; background: linear-gradient(135deg, #1A1D20, #101315); }
+  ._aamu { display: flex; gap: 16px; padding: 10px 14px 4px; font-size: 12px; color: #8A9199; }
+  ._aamu [role="button"]:last-child { margin-left: auto; }
+  ._aacl { font-size: 13px; font-weight: 600; padding: 0 14px; }
+  ._a9zs { padding: 6px 14px 0; }
+  ._a9zs ._aaco { font-weight: 600; margin-right: 6px; }
+  ._ap3a { color: #DBDBDB; }
+  ._a9zr { padding: 5px 14px 0; }
+  ._a9zc { color: #8A9199; font-size: 13px; }
+  ._aaqe { display: block; padding: 5px 14px 0; font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase; color: #6C7378; }
+  ._aasa form { display: flex; align-items: center; gap: 8px; padding: 9px 14px 4px; }
+  ._ablz {
+    flex: 1; min-height: 20px; resize: none; border: 0; outline: 0; padding: 0;
+    background: transparent; color: #F5F5F5; font: inherit;
+  }
+  ._aasa button { border: 0; background: none; color: #4A9BEA; font: inherit; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <b>Replica, not Instagram.</b> Same DOM shape as an Instagram feed — an
+  <code>&lt;article&gt;</code> per post with an "Add a comment" form inside each one — served from
+  this app's own origin so the real content script can run in it. The filtering you see below is
+  the genuine engine.
+</div>
+
+<main role="main">
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">harbour.transit</div><div class="x1lliihq">Harbour Transit · 12m</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">418 likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">harbour.transit</span><span class="_ap3a">The transit authority approved the new bus lane on Tuesday. According to the agency report, service should begin in March once the signals are reprogrammed and drivers have finished training. Two council members voted against, citing loading-bay access.</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 12 comments</a></div>
+    <time class="_aaqe">12 minutes ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">wellness.truth.daily</div><div class="x1lliihq">Sponsored · 24m</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">31.2k likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">wellness.truth.daily</span><span class="_ap3a">Doctors HATE this: one simple root cures cancer in weeks. Big pharma is hiding it because they lose money when you get better. 100% proven, no side effects, works every single time. Nobody in the medical establishment will ever admit it.</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 1,847 comments</a></div>
+    <time class="_aaqe">24 minutes ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">marta.ilves</div><div class="x1lliihq">Marta Ilves · 41m</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">96 likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">marta.ilves</span><span class="_ap3a">A study published in the journal Nature reports that the new sodium chemistry held 91% of its capacity after 1,000 cycles. The authors note the sample size was small and say the result needs replication before anyone reads too much into it.</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 8 comments</a></div>
+    <time class="_aaqe">41 minutes ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">realtalk.daily</div><div class="x1lliihq">1h</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">12.8k likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">realtalk.daily</span><span class="_ap3a">WAKE UP. They do not want you to know what is really going on. Do your own research and share this before it gets deleted. The mainstream media will never report it because they are all in on it together.</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 903 comments</a></div>
+    <time class="_aaqe">1 hour ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">sam.writes</div><div class="x1lliihq">2h</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">204 likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">sam.writes</span><span class="_ap3a">I have been struggling for weeks now and everything feels like far too much to carry. I do not really know what to do next or who else I could talk to about any of it. Writing it down helps a little, so here it is.</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 47 comments</a></div>
+    <time class="_aaqe">2 hours ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">hidden.facts.uncovered</div><div class="x1lliihq">3h</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">8,391 likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">hidden.facts.uncovered</span><span class="_ap3a">What they are hiding about the water supply will shock you. This has been suppressed for years and the so-called experts are paid to keep quiet about it. Connect the dots yourself — it is all right there if you are willing to look.</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 2,204 comments</a></div>
+    <time class="_aaqe">3 hours ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+  <article class="_aatb">
+    <header class="_aaqy"><div class="_aar0"></div><div><div class="_acan">nadia.k</div><div class="x1lliihq">4h</div></div><div role="button">•••</div></header>
+    <div class="_aagv"></div>
+    <section class="_aamu"><div role="button">Like</div><div role="button">Comment</div><div role="button">Share</div><div role="button">Save</div></section>
+    <div class="_aacl">57 likes</div>
+    <div class="_a9zs"><span class="_aacl _aaco">nadia.k</span><span class="_ap3a">first loaf out of the new oven 🍞</span></div>
+    <div class="_a9zr"><a class="_a9zc" role="link">View all 3 comments</a></div>
+    <time class="_aaqe">4 hours ago</time>
+    <section class="_aasa"><form method="POST"><textarea class="_ablz" rows="1" aria-label="Add a comment" placeholder="Add a comment…"></textarea><button type="submit">Post</button></form></section>
+  </article>
+
+</main>
+</body>
+</html>

@@ -71,15 +71,63 @@ export const INJECTED_SCRIPT = `
     return s.visibility !== 'hidden' && s.display !== 'none';
   }
 
-  /* A node holding an editable field is a composer, not a post. Never cover
-     something the user is typing into. */
-  function interactive(el) {
-    return !!el.querySelector('input, textarea, [contenteditable="true"], form');
+  function isEditable(el) {
+    var tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'FORM' ||
+      el.getAttribute('contenteditable') === 'true';
   }
 
+  /* The outermost editable regions inside el, so a form wrapping a textarea
+     counts once instead of twice. */
+  function editableRoots(el) {
+    var found = [].slice.call(
+      el.querySelectorAll('input, textarea, form, [contenteditable="true"]')
+    );
+    return found.filter(function (f) {
+      for (var i = 0; i < found.length; i++) {
+        if (found[i] !== f && found[i].contains(f)) return false;
+      }
+      return true;
+    });
+  }
+
+  /* How much of a block's text belongs to the page rather than to a field the
+     user types into.
+
+     The rule used to be "skip any block containing a field at all", which
+     sounds cautious and is not: Instagram puts an "Add a comment" form inside
+     every feed article, so the entire feed was invisible to the filter. What
+     separates a composer from a post is not whether a field is present but
+     where the words are — a composer's text sits inside the field, a post's
+     text sits outside one. */
+  function prose(el) {
+    var n = (el.textContent || '').length;
+    var roots = editableRoots(el);
+    for (var i = 0; i < roots.length; i++) n -= (roots[i].textContent || '').length;
+    return n;
+  }
+
+  /* Whatever else is true, never touch the block someone is typing in. */
+  function beingTyped(el) {
+    var active = document.activeElement;
+    if (!active || active === document.body) return false;
+    return el.contains(active) && (isEditable(active) || active.isContentEditable);
+  }
+
+  /* Reads the post and not the reply box under it — a half-written reply is the
+     user's own words and must never be scored or sent across the bridge. */
   function textOf(el) {
-    var t = (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim();
-    return t;
+    var parts = [];
+    (function walk(node) {
+      for (var i = 0; i < node.childNodes.length; i++) {
+        var c = node.childNodes[i];
+        if (c.nodeType === 3) { parts.push(c.nodeValue); continue; }
+        if (c.nodeType !== 1) continue;
+        if (isEditable(c)) continue;
+        walk(c);
+      }
+    })(el);
+    return parts.join(' ').replace(/\\s+/g, ' ').trim();
   }
 
   /* Primary pass: roles that real feeds almost always use. */
@@ -117,9 +165,9 @@ export const INJECTED_SCRIPT = `
     var kept = nodes.filter(function (el) {
       if (el.__tfId) return false;
       if (el.closest && el.closest('.tf-wrap')) return false;
-      if (interactive(el)) return false;
+      if (beingTyped(el)) return false;
       if (!visible(el)) return false;
-      var len = (el.textContent || '').length;
+      var len = prose(el);
       return len >= MIN_TEXT && len <= MAX_TEXT;
     });
 

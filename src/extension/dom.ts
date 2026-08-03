@@ -25,13 +25,46 @@ export interface ScanOptions {
   limit?: number;
 }
 
+const EDITABLE = 'input, textarea, form, [contenteditable="true"]';
+
+function isEditable(el: Element): boolean {
+  const tag = el.tagName;
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'FORM' ||
+    el.getAttribute('contenteditable') === 'true'
+  );
+}
+
+/** Outermost editable regions, so a form wrapping a textarea counts once. */
+function editableRoots(el: Element): Element[] {
+  const found = Array.from(el.querySelectorAll(EDITABLE));
+  return found.filter((f) => !found.some((other) => other !== f && other.contains(f)));
+}
+
 /**
- * A node holding an editable field is a composer, a search box, or a login
- * form — never a post. Covering one would be worse than useless, so these are
- * excluded before anything is read from them.
+ * How much of a block's text belongs to the page rather than to a field the
+ * user types into.
+ *
+ * This used to be a blunt "does it contain a field at all", which sounds
+ * cautious and is not: Instagram puts an "Add a comment" form inside every feed
+ * article, so the whole feed was invisible and the extension filtered nothing
+ * there. What separates a composer from a post is not the presence of a field
+ * but where the words are — a composer's text sits inside the field, a post's
+ * text sits outside one.
  */
-export function isInteractive(el: Element): boolean {
-  return !!el.querySelector('input, textarea, [contenteditable="true"], form');
+export function proseLength(el: Element): number {
+  let length = (el.textContent ?? '').length;
+  for (const root of editableRoots(el)) length -= (root.textContent ?? '').length;
+  return length;
+}
+
+/** Whatever else is true, never touch the block someone is typing in. */
+export function isBeingTyped(el: Element): boolean {
+  const active = el.ownerDocument.activeElement;
+  if (!active || active === el.ownerDocument.body) return false;
+  return el.contains(active) && (isEditable(active) || (active as HTMLElement).isContentEditable);
 }
 
 export function isVisible(el: Element): boolean {
@@ -42,9 +75,25 @@ export function isVisible(el: Element): boolean {
   return style.visibility !== 'hidden' && style.display !== 'none';
 }
 
+/**
+ * Reads the post and not the reply box under it — a half-written comment is the
+ * user's own words and must never be scored.
+ */
 export function textOf(el: Element): string {
-  const raw = (el as HTMLElement).innerText ?? el.textContent ?? '';
-  return raw.replace(/\s+/g, ' ').trim();
+  const parts: string[] = [];
+  const walk = (node: Node): void => {
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === 3) {
+        parts.push(child.nodeValue ?? '');
+        continue;
+      }
+      if (child.nodeType !== 1) continue;
+      if (isEditable(child as Element)) continue;
+      walk(child);
+    }
+  };
+  walk(el);
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
 /** Roles real feeds almost always use, and the cheapest thing to try first. */
@@ -97,9 +146,9 @@ export function findPosts(root: ParentNode, options: ScanOptions = {}): Element[
   const kept = nodes.filter((el) => {
     if (el.hasAttribute('data-tf-id')) return false;
     if (el.closest('[data-tf-id]')) return false;
-    if (isInteractive(el)) return false;
+    if (isBeingTyped(el)) return false;
     if (!isVisible(el)) return false;
-    const length = (el.textContent ?? '').length;
+    const length = proseLength(el);
     return length >= min && length <= max;
   });
 

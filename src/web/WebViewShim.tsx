@@ -29,8 +29,9 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, radius, spacing, type } from '../theme';
 
-/** The same-origin page the simulator can actually filter. Served beside the app. */
+/** The same-origin pages the simulator can actually filter. Served beside the app. */
 const SAMPLE_FEED = 'sample-feed/index.html';
+const INSTAGRAM_REPLICA = 'sample-feed/instagram.html';
 
 export interface WebViewMessageEvent {
   nativeEvent: { data: string; url?: string; title?: string };
@@ -88,6 +89,19 @@ function hostOf(uri: string): string {
   } catch {
     return uri;
   }
+}
+
+/**
+ * Which stand-in page to offer for a site we cannot frame.
+ *
+ * Instagram gets its own because its markup is shaped differently from a
+ * timeline: every post is an <article> with an "Add a comment" form inside it.
+ * That shape used to defeat post detection entirely, so it is worth being able
+ * to watch it work rather than taking it on trust.
+ */
+function replicaFor(uri: string): string {
+  const host = hostOf(uri);
+  return /(^|\.)instagram\.com$/i.test(host) ? INSTAGRAM_REPLICA : SAMPLE_FEED;
 }
 
 export const WebView = forwardRef<WebViewHandle, ShimProps>(function WebView(props, ref) {
@@ -197,12 +211,20 @@ export const WebView = forwardRef<WebViewHandle, ShimProps>(function WebView(pro
       </Text>
 
       <Pressable
-        onPress={() => setOverride(SAMPLE_FEED)}
+        onPress={() => setOverride(replicaFor(requested))}
         accessibilityRole="button"
-        accessibilityLabel="Load the sample feed"
+        accessibilityLabel={
+          replicaFor(requested) === INSTAGRAM_REPLICA
+            ? 'Load an Instagram-shaped replica'
+            : 'Load the sample feed'
+        }
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
       >
-        <Text style={styles.buttonLabel}>Load the sample feed</Text>
+        <Text style={styles.buttonLabel}>
+          {replicaFor(requested) === INSTAGRAM_REPLICA
+            ? 'Load an Instagram-shaped replica'
+            : 'Load the sample feed'}
+        </Text>
       </Pressable>
 
       <Text style={styles.footnote}>
