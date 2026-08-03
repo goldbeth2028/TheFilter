@@ -22,4 +22,8 @@ for (const file of ['manifest.json', 'popup.html', 'background.js']) {
   await cp(`extension/${file}`, `${outdir}/${file}`);
 }
 
+// Without these the extension is a blank placeholder in the browser's list,
+// which makes it needlessly hard to find and enable.
+await cp('extension/icons', `${outdir}/icons`, { recursive: true });
+
 console.log(`Extension built into ${outdir}`);
