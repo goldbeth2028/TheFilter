@@ -231,6 +231,15 @@ export function BrowseScreen() {
         setSupportMultipleWindows={false}
         thirdPartyCookiesEnabled
         sharedCookiesEnabled
+        /*
+         * A WKWebView's default user agent omits the `Version/… Safari/…` tail
+         * that mobile Safari sends, which is enough to make Instagram and
+         * Facebook treat an ordinary sign-in as suspicious. This appends it
+         * while leaving the device and OS portion the system generated, so the
+         * string stays accurate as the OS moves — the engine really is WebKit.
+         * It reduces false challenges; it does not promise to remove them.
+         */
+        applicationNameForUserAgent="Version/17.0 Mobile/15E148 Safari/604.1"
         style={styles.web}
         containerStyle={styles.webContainer}
       />

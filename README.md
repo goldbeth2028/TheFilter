@@ -272,9 +272,40 @@ challenge WebView logins — expect 2FA flows to break.
 npm install
 npm start          # Expo dev server; press i / a, or scan with Expo Go
 npm run simulator  # no phone and no Mac? the app in a browser — see above
-npm test           # engine, normalization, feed-parser, browse tests (74)
+npm test           # engine, normalization, feed-parser, browse tests
 npm run typecheck
 ```
+
+### On a Mac, where the browsing tab actually works
+
+Everything above runs anywhere. Filtering a real logged-in feed needs a native
+WebView, and that needs a real build:
+
+```sh
+npx expo run:ios            # prebuilds ios/, pods, builds, boots the Simulator
+```
+
+Xcode and CocoaPods have to be installed; the first build takes a while and
+later ones are quick. `ios/` is generated, not committed — `expo prebuild` owns
+it, so edit `app.json` rather than the Xcode project.
+
+Then open Browse, pick a site, and sign in as you normally would. The WebView
+keeps its own cookie jar, so the session lives in the app and is not shared with
+Safari. Sign-in is the fragile part: Instagram and Facebook challenge logins
+from anything that does not look like a normal browser, and while the app sends
+a Safari user agent for that reason, a challenge is still possible. Bluesky,
+Mastodon, Reddit, Hacker News, Lemmy and Tumblr are all undramatic to log into.
+
+For the desktop browser on the same Mac, the extension converts to Safari:
+
+```sh
+npm run build:extension
+xcrun safari-web-extension-converter extension/dist --project-location ./safari
+```
+
+That emits an Xcode project; build and run it, then enable the extension in
+Safari's settings and allow it on the sites you want filtered. This is the only
+route that filters a real feed without a phone in the loop at all.
 
 `npm run web` starts the Expo dev server for web instead, with fast refresh — the
 same bundle as the simulator but at full window size, with no phone frame around
