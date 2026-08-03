@@ -319,12 +319,14 @@ xcrun safari-web-extension-converter extension/dist --project-location ./safari
 That emits an Xcode project; build and run it, then enable the extension in
 Safari's settings and allow it on the sites you want filtered.
 
-The same project builds for iPhone. In Xcode pick an iOS destination instead of
-My Mac, run it, then on the phone: Settings -> Apps -> Safari -> Extensions ->
-The Filter -> on, and set the site permissions to Always Allow. From then on
-instagram.com in Safari is filtered on the device itself. It does not touch the
-Instagram app — nothing can — so this only helps if you are willing to read the
-site in Safari instead.
+The same project builds for iPhone, but getting it onto one has more gates than
+the toggle — a globally unique bundle identifier, Developer Mode, trusting the
+certificate, launching the container app once, and granting site permission,
+each of which fails silently and differently. They are written out in order in
+[extension/IPHONE.md](extension/IPHONE.md).
+
+It does not touch the Instagram app — nothing can — so this only helps if you
+are willing to read the site in Safari instead.
 
 `npm run web` starts the Expo dev server for web instead, with fast refresh — the
 same bundle as the simulator but at full window size, with no phone frame around
