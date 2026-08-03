@@ -47,7 +47,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "./plugins/with-fmt-cxx17"
     ],
     "icon": "./assets/icon.png"
   }
