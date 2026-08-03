@@ -16,29 +16,48 @@ export interface SiteOption {
   hosts: string[];
   /** Shown under the tile — set when a site is known to be awkward here. */
   note?: string;
+  /**
+   * Tile colour, and the ink that stays legible on it.
+   *
+   * These are the sites' own brand colours, not their logos. Shipping the real
+   * marks would mean redistributing other companies' trademarks inside an App
+   * Store binary, which is their call to grant and not ours to assume. A
+   * colour plus the site's initials is recognisable at arm's length, which is
+   * the part that actually matters on a home screen.
+   */
+  brand: string;
+  ink: 'light' | 'dark';
 }
 
 export const SITES: SiteOption[] = [
   {
     id: 'bluesky',
+    brand: '#0A7AFF',
+    ink: 'light',
     name: 'Bluesky',
     url: 'https://bsky.app',
     hosts: ['bsky.app', 'bsky.social', 'bsky.network'],
   },
   {
     id: 'mastodon',
+    brand: '#5B5CE2',
+    ink: 'light',
     name: 'Mastodon',
     url: 'https://mastodon.social/explore',
     hosts: ['mastodon.social', 'mastodon.online'],
   },
   {
     id: 'reddit',
+    brand: '#FF4500',
+    ink: 'light',
     name: 'Reddit',
     url: 'https://www.reddit.com',
     hosts: ['reddit.com', 'redd.it', 'redditstatic.com', 'redditmedia.com'],
   },
   {
     id: 'x',
+    brand: '#E9EBED',
+    ink: 'dark',
     name: 'X',
     url: 'https://x.com/home',
     hosts: ['x.com', 'twitter.com', 't.co', 'twimg.com'],
@@ -46,6 +65,8 @@ export const SITES: SiteOption[] = [
   },
   {
     id: 'instagram',
+    brand: '#D9316E',
+    ink: 'light',
     name: 'Instagram',
     url: 'https://www.instagram.com',
     hosts: ['instagram.com', 'cdninstagram.com', 'fbcdn.net', 'facebook.com'],
@@ -53,6 +74,8 @@ export const SITES: SiteOption[] = [
   },
   {
     id: 'facebook',
+    brand: '#1877F2',
+    ink: 'light',
     name: 'Facebook',
     url: 'https://m.facebook.com',
     hosts: ['facebook.com', 'fbcdn.net', 'messenger.com'],
@@ -60,12 +83,16 @@ export const SITES: SiteOption[] = [
   },
   {
     id: 'threads',
+    brand: '#C9CDD1',
+    ink: 'dark',
     name: 'Threads',
     url: 'https://www.threads.net',
     hosts: ['threads.net', 'threads.com', 'instagram.com', 'cdninstagram.com', 'fbcdn.net'],
   },
   {
     id: 'tiktok',
+    brand: '#22D6D0',
+    ink: 'dark',
     name: 'TikTok',
     url: 'https://www.tiktok.com/foryou',
     hosts: ['tiktok.com', 'tiktokcdn.com', 'ttwstatic.com', 'byteoversea.com'],
@@ -73,6 +100,8 @@ export const SITES: SiteOption[] = [
   },
   {
     id: 'youtube',
+    brand: '#E62117',
+    ink: 'light',
     name: 'YouTube',
     url: 'https://m.youtube.com',
     hosts: [
@@ -88,18 +117,24 @@ export const SITES: SiteOption[] = [
   },
   {
     id: 'hackernews',
+    brand: '#FF6600',
+    ink: 'light',
     name: 'Hacker News',
     url: 'https://news.ycombinator.com',
     hosts: ['news.ycombinator.com', 'ycombinator.com'],
   },
   {
     id: 'lemmy',
+    brand: '#14A06B',
+    ink: 'light',
     name: 'Lemmy',
     url: 'https://lemmy.world',
     hosts: ['lemmy.world', 'lemmy.ml'],
   },
   {
     id: 'tumblr',
+    brand: '#3C5A78',
+    ink: 'light',
     name: 'Tumblr',
     url: 'https://www.tumblr.com/dashboard',
     hosts: ['tumblr.com', 'tumblr.co', 'srvcs.tumblr.com'],

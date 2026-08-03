@@ -18,6 +18,7 @@
     "simulator:serve": "node scripts/serve-simulator.mjs",
     "verify:simulator": "node scripts/verify-simulator.mjs",
     "verify:detector": "node scripts/verify-detector.mjs",
+    "verify:preview": "node scripts/verify-preview.mjs",
     "preview": "node scripts/build-simulator.mjs && node scripts/build-preview.mjs"
   },
   "dependencies": {

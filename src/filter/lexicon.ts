@@ -24,6 +24,46 @@ const p = (source: string, weight: number, note: string): Pattern => ({
   note,
 });
 
+/**
+ * Adult and graphic material.
+ *
+ * Written for precision, not coverage. Every pattern here is a phrase that is
+ * hard to produce by accident, because this category is the one most likely to
+ * be turned up high for a child or someone who wants a quiet feed, and a
+ * category that fires on ordinary sentences at high sensitivity makes the whole
+ * app useless. Bare "sex" and bare "nude" are deliberately absent: sex
+ * education, sex differences, and a nude in a gallery are not what this is for.
+ *
+ * As everywhere else in this file, there are no slurs. Harassment is the
+ * hostility bank's job.
+ */
+export const EXPLICIT: Pattern[] = [
+  p("\\b(nsfw|nsfl)\\b", 0.5, 'marked not safe for work'),
+  p("\\bonly ?fans\\b|\\bfansly\\b", 0.55, 'adult subscription site'),
+  p("\\b(porn|pornhub|pornographic|xvideos|xhamster|redtube)\\b", 0.6, 'pornography reference'),
+  p("\\bxxx\\b", 0.4, 'adult content marker'),
+  p("\\b(nudes|sexting|sext|dick ?pics?)\\b", 0.6, 'explicit imagery'),
+  p("\\b(camgirl|camboy|cam ?site|webcam ?show)\\b", 0.55, 'adult webcam reference'),
+  p("\\b(escort service|escorts? available|sugar (daddy|baby))\\b", 0.5, 'solicitation'),
+  p("\\bhorny\\b|\\bturn(s|ed)? me on\\b", 0.35, 'sexual come-on'),
+  p("\\b(sex ?tape|sex ?cam|hardcore|explicit (photos?|videos?|content|pics?))\\b", 0.55, 'explicit material'),
+  p("\\b(18\\+|adults? only)\\b.{0,30}\\b(content|link|site|video)\\b", 0.5, 'age-gated material'),
+  p("\\b(dm|pm) me (for|if you want)\\b.{0,24}\\b(pics?|vids?|fun|good time)\\b", 0.55, 'solicitation'),
+  p("\\blink in bio\\b.{0,30}\\b(spicy|naughty|adult|18)\\b", 0.5, 'adult funnel'),
+];
+
+/** Gore and graphic violence, kept separate so the notes stay accurate. */
+export const GRAPHIC: Pattern[] = [
+  p("\\b(gore|gory)\\b", 0.4, 'graphic material'),
+  p("\\bgraphic (content|footage|video|images?|warning)\\b", 0.45, 'graphic-content warning'),
+  p("\\b(beheading|decapitat\\w+|dismember\\w+|mutilat\\w+|disembowel\\w+)\\b", 0.7, 'graphic violence'),
+  p("\\b(execution|torture) (video|footage|clip)\\b", 0.7, 'graphic violence'),
+  p("\\b(dead|mangled|charred) bodies\\b", 0.55, 'graphic imagery'),
+  p("\\bblood ?bath\\b|\\bbrutal(ly)? (murder|beaten|killed)\\b", 0.5, 'graphic violence'),
+  p("\\bwatch (him|her|them) die\\b", 0.65, 'graphic violence'),
+  p("\\bsnuff (film|video)\\b", 0.75, 'graphic violence'),
+];
+
 /** Contempt, insults and dehumanizing framing aimed at people. */
 export const HOSTILITY: Pattern[] = [
   p("\\b(idiot|moron|imbecile|cretin|dumbass|dipshit)s?\\b", 0.34, 'name-calling'),

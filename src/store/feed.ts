@@ -9,7 +9,7 @@ import { create } from 'zustand';
 import { decide, hiddenRatio, screenBatch, thresholdFor } from '../filter/engine';
 import { applyLlmVerdict, classifyWithClaude, isBorderline, LlmError } from '../filter/llm';
 import { fetchAll, type SourceError } from '../sources/fetchers';
-import { CATEGORIES, type Category, type Post, type ScreenedPost } from '../types';
+import { CATEGORIES, type Category, type Post, type ScreenedPost, zeroByCategory } from '../types';
 import { useSettings } from './settings';
 
 /** Cap on how many posts get a paid second opinion per refresh. */
@@ -174,14 +174,7 @@ export const useFeed = create<FeedState>()((set, get) => ({
 
 function emptyAnalysis() {
   return {
-    scores: {
-      toxicity: 0,
-      outrage: 0,
-      doom: 0,
-      conspiracy: 0,
-      misinfo: 0,
-      engagementBait: 0,
-    },
+    scores: zeroByCategory(),
     evidence: [],
     credibility: 0,
     topScore: 0,

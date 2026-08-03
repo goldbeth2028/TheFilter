@@ -1,9 +1,15 @@
 /**
- * Screen 2 — Filters. Per-category toggles, plus which feeds they cover.
+ * Screen 2 — Filters, in two shapes.
  *
- * The toggles map onto the engine's per-category sensitivity: on restores that
- * category's default sensitivity, off drops it to zero. Strength then scales how
- * far the engine may go for everything that is on — label, blur, or collapse.
+ * Simple mode is what the app opens as, and it asks one question: who is
+ * holding the phone. Three answers, each a preset over every category. Six
+ * sliders and a strength ladder are a reasonable interface for someone who
+ * enjoys tuning things and a wall for everybody else, and "everybody else" is
+ * most people setting up a phone for a child or a parent.
+ *
+ * Advanced mode is the old screen, unchanged and one tap away. Nothing is
+ * removed by choosing simple — the stored dials are left exactly as they were,
+ * so switching back hands them straight back.
  */
 
 import React, { useState } from 'react';
@@ -14,7 +20,16 @@ import { DEFAULT_SETTINGS } from '../filter/engine';
 import { useFeed } from '../store/feed';
 import { useSettings } from '../store/settings';
 import { colors, radius, spacing, type } from '../theme';
-import { CATEGORIES, CATEGORY_META, type Category, type FilterMode } from '../types';
+import {
+  CATEGORIES,
+  CATEGORY_META,
+  PROTECTION_META,
+  type Category,
+  type FilterMode,
+  type ProtectionLevel,
+} from '../types';
+
+const PROTECTION_ORDER: ProtectionLevel[] = ['child', 'calm', 'light'];
 
 const STRENGTHS: Array<{ mode: FilterMode; label: string; blurb: string }> = [
   { mode: 'label', label: 'Label only', blurb: 'Nothing is hidden — posts carry a note' },
@@ -28,6 +43,8 @@ export function FiltersScreen() {
   const setSensitivity = useSettings((s) => s.setSensitivity);
   const setMode = useSettings((s) => s.setMode);
   const toggleSource = useSettings((s) => s.toggleSource);
+  const setSimpleMode = useSettings((s) => s.setSimpleMode);
+  const setProtection = useSettings((s) => s.setProtection);
   const setLockdownBrowsing = useSettings((s) => s.setLockdownBrowsing);
   const setBrowseRemoves = useSettings((s) => s.setBrowseRemoves);
   const setLlmEnabled = useSettings((s) => s.setLlmEnabled);
@@ -52,6 +69,13 @@ export function FiltersScreen() {
     rescreen();
   };
 
+  const chooseProtection = (level: ProtectionLevel) => {
+    setProtection(level);
+    rescreen();
+  };
+
+  const simple = settings.simpleMode;
+
   return (
     <ScrollView
       style={styles.screen}
@@ -63,13 +87,42 @@ export function FiltersScreen() {
       </View>
 
       <View style={styles.titleBlock}>
-        <Text style={styles.largeTitle}>What to filter</Text>
+        <Text style={styles.largeTitle}>{simple ? 'Who is this for?' : 'What to filter'}</Text>
         <Text style={styles.subtitle}>
-          Anything you turn on is covered by a short label in your feed, with the reason attached.
-          Nothing is deleted, and one tap always shows the post.
+          {simple
+            ? 'Pick one. Flagged posts are covered by a short label saying why, and one tap always shows the post underneath. Nothing is ever deleted.'
+            : 'Anything you turn on is covered by a short label in your feed, with the reason attached. Nothing is deleted, and one tap always shows the post.'}
         </Text>
       </View>
 
+      {simple ? (
+        <View style={styles.section}>
+          <Card>
+            {PROTECTION_ORDER.map((level, index) => (
+              <View key={level}>
+                {index > 0 ? <Separator /> : null}
+                <Row
+                  title={PROTECTION_META[level].label}
+                  subtitle={PROTECTION_META[level].blurb}
+                  minHeight={84}
+                  prominent
+                  onPress={() => chooseProtection(level)}
+                  right={
+                    settings.protection === level ? <SelectedDot /> : <View style={styles.dotSpace} />
+                  }
+                />
+              </View>
+            ))}
+          </Card>
+          <Text style={styles.footnote}>
+            Adult and graphic content is hidden at every level, including the lightest. The rest —
+            hostility, outrage, conspiracies, unverified claims — is what the choice changes.
+          </Text>
+        </View>
+      ) : null}
+
+      {simple ? null : (
+        <>
       <View style={styles.section}>
         <SectionLabel>Content</SectionLabel>
         <Card>
@@ -111,6 +164,8 @@ export function FiltersScreen() {
           Set every category off, or pick Label only, and the app stops covering anything at all.
         </Text>
       </View>
+        </>
+      )}
 
       <View style={styles.section}>
         <SectionLabel>Where it applies</SectionLabel>
@@ -153,32 +208,40 @@ export function FiltersScreen() {
               />
             }
           />
-          <Separator />
-          <Row
-            title="Take flagged posts out"
-            subtitle="Removes them from the page instead of covering them"
-            right={
-              <Toggle
-                value={settings.browseRemoves}
-                onChange={setBrowseRemoves}
-                label="Take flagged posts out"
+          {simple ? null : (
+            <>
+              <Separator />
+              <Row
+                title="Take flagged posts out"
+                subtitle="Removes them from the page instead of covering them"
+                right={
+                  <Toggle
+                    value={settings.browseRemoves}
+                    onChange={setBrowseRemoves}
+                    label="Take flagged posts out"
+                  />
+                }
               />
-            }
-          />
+            </>
+          )}
         </Card>
         <Text style={styles.footnote}>
           Lockdown gives the Browse tab no address bar and refuses navigation away from whichever
           site you opened. This locks the browser, not the phone — Guided Access on iOS and screen
           pinning on Android are the tools for that.
         </Text>
-        <Text style={styles.footnote}>
-          Taking posts out is the firmer option: they are gone from the feed, with no cover to tap.
-          The header still counts them, so you always know how many — but you cannot get one back
-          without switching this off and reloading. Covering keeps that door open, which is why it
-          is the default.
-        </Text>
+        {simple ? null : (
+          <Text style={styles.footnote}>
+            Taking posts out is the firmer option: they are gone from the feed, with no cover to
+            tap. The header still counts them, so you always know how many — but you cannot get one
+            back without switching this off and reloading. Covering keeps that door open, which is
+            why it is the default.
+          </Text>
+        )}
       </View>
 
+      {simple ? null : (
+        <>
       <View style={styles.section}>
         <SectionLabel>Second opinion</SectionLabel>
         <Card>
@@ -276,6 +339,26 @@ export function FiltersScreen() {
           Muted phrases always collapse, whatever the strength setting. This is your rule, not the
           filter’s judgement.
         </Text>
+      </View>
+        </>
+      )}
+
+      <View style={styles.section}>
+        <Card>
+          <Row
+            title={simple ? 'Advanced settings' : 'Back to the simple screen'}
+            subtitle={
+              simple
+                ? 'Per-category dials, muted phrases, and the Claude second opinion'
+                : 'One choice instead of these. Your dials are kept as they are.'
+            }
+            onPress={() => {
+              setSimpleMode(!simple);
+              rescreen();
+            }}
+            right={<Text style={styles.remove}>{simple ? 'Show' : 'Use'}</Text>}
+          />
+        </Card>
       </View>
     </ScrollView>
   );

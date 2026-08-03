@@ -20,7 +20,7 @@
  *    covered or read.
  */
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   Pressable,
@@ -32,11 +32,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import { Card, SectionLabel, StatusPill } from '../components/primitives';
+import { Card, SectionLabel, Separator, StatusPill } from '../components/primitives';
 import { WhyPanel } from '../components/WhyPanel';
 import { INJECTED_SCRIPT } from '../browse/injected';
 import { buildApplyCall, parseBridgeMessage, toUrl, type Verdict } from '../browse/protocol';
-import { isAllowed, monogram, SITES, type SiteOption } from '../browse/sites';
+import { isAllowed, monogram, SITES, siteById, type SiteOption } from '../browse/sites';
 import { screenBatch } from '../filter/engine';
 import { postFromText } from '../sources/fetchers';
 import { useSettings } from '../store/settings';
@@ -44,7 +44,14 @@ import { colors, radius, spacing, TOUCH_TARGET, type } from '../theme';
 import { CATEGORY_META, type ScreenedPost } from '../types';
 
 /** Stands in for a preset when the user has turned lockdown off. */
-const ANYWHERE: SiteOption = { id: '__any', name: 'Any site', url: '', hosts: [] };
+const ANYWHERE: SiteOption = {
+  id: '__any',
+  name: 'Any site',
+  url: '',
+  hosts: [],
+  brand: colors.accent,
+  ink: 'dark',
+};
 
 export function BrowseScreen() {
   const settings = useSettings((s) => s.settings);
@@ -52,6 +59,8 @@ export function BrowseScreen() {
   const recordReveal = useSettings((s) => s.recordReveal);
   const recordDisagreement = useSettings((s) => s.recordDisagreement);
   const allowPhrase = useSettings((s) => s.allowPhrase);
+  const addSite = useSettings((s) => s.addSite);
+  const removeSite = useSettings((s) => s.removeSite);
   const insets = useSafeAreaInsets();
 
   const webRef = useRef<WebView>(null);
@@ -65,6 +74,21 @@ export function BrowseScreen() {
   const [removed, setRemoved] = useState(0);
   const [freeAddress, setFreeAddress] = useState('');
   const [explaining, setExplaining] = useState<ScreenedPost | undefined>();
+  const [editing, setEditing] = useState(false);
+
+  // Resolved in the order the user added them, skipping any id from an older
+  // build whose site no longer exists.
+  const chosen = useMemo(
+    () => settings.enabledSiteIds.map((id) => siteById(id)).filter((s): s is SiteOption => !!s),
+    [settings.enabledSiteIds],
+  );
+
+  // Removing the last tile takes the Done button away with it. Without this the
+  // screen stays in edit mode invisibly, and the next site you add arrives
+  // wearing a remove badge.
+  useEffect(() => {
+    if (chosen.length === 0) setEditing(false);
+  }, [chosen.length]);
 
   const open = useCallback((next: SiteOption, startUrl?: string) => {
     screened.current.clear();
@@ -183,6 +207,11 @@ export function BrowseScreen() {
       <Launcher
         insets={insets.top + spacing.sm}
         lockdown={settings.lockdownBrowsing}
+        chosen={chosen}
+        editing={editing}
+        onToggleEditing={() => setEditing((on) => !on)}
+        onAdd={addSite}
+        onRemove={removeSite}
         address={freeAddress}
         onAddress={setFreeAddress}
         onOpen={open}
@@ -259,9 +288,41 @@ export function BrowseScreen() {
   );
 }
 
+/**
+ * A site's badge: its brand colour and initials.
+ *
+ * Not its logo. Shipping other companies' marks inside an App Store binary is
+ * theirs to permit, and none of them have. Colour plus initials is what makes a
+ * tile findable at arm's length anyway, which is the job.
+ */
+function SiteBadge({ site, size }: { site: SiteOption; size: number }) {
+  return (
+    <View
+      style={[
+        styles.badge,
+        { width: size, height: size, borderRadius: size / 3.2, backgroundColor: site.brand },
+      ]}
+    >
+      <Text
+        style={[
+          styles.badgeText,
+          { fontSize: size * 0.4, color: site.ink === 'light' ? '#FFFFFF' : '#101315' },
+        ]}
+      >
+        {monogram(site.name)}
+      </Text>
+    </View>
+  );
+}
+
 function Launcher({
   insets,
   lockdown,
+  chosen,
+  editing,
+  onToggleEditing,
+  onAdd,
+  onRemove,
   address,
   onAddress,
   onOpen,
@@ -269,11 +330,18 @@ function Launcher({
 }: {
   insets: number;
   lockdown: boolean;
+  chosen: SiteOption[];
+  editing: boolean;
+  onToggleEditing: () => void;
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
   address: string;
   onAddress: (value: string) => void;
   onOpen: (site: SiteOption) => void;
   onOpenAnywhere: () => void;
 }) {
+  const available = SITES.filter((site) => !chosen.some((c) => c.id === site.id));
+
   return (
     <ScrollView
       style={styles.screen}
@@ -288,37 +356,91 @@ function Launcher({
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <SectionLabel action={<StatusPill label={lockdown ? 'Locked' : 'Open'} outlined />}>
-          Sites
-        </SectionLabel>
-        <View style={styles.grid}>
-          {SITES.map((option) => (
-            <Pressable
-              key={option.id}
-              onPress={() => onOpen(option)}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${option.name}`}
-              style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
-            >
-              <View style={styles.tileIcon}>
-                <Text style={styles.tileMonogram}>{monogram(option.name)}</Text>
+      {chosen.length > 0 ? (
+        <View style={styles.section}>
+          <SectionLabel
+            action={
+              <Pressable onPress={onToggleEditing} accessibilityRole="button" hitSlop={10}>
+                <Text style={styles.editLink}>{editing ? 'Done' : 'Edit'}</Text>
+              </Pressable>
+            }
+          >
+            Your sites
+          </SectionLabel>
+          <View style={styles.grid}>
+            {chosen.map((option) => (
+              <View key={option.id} style={styles.tileSlot}>
+                <Pressable
+                  onPress={() => (editing ? onRemove(option.id) : onOpen(option))}
+                  accessibilityRole="button"
+                  accessibilityLabel={editing ? `Remove ${option.name}` : `Open ${option.name}`}
+                  style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
+                >
+                  <SiteBadge site={option} size={44} />
+                  <Text style={styles.tileName} numberOfLines={1}>
+                    {option.name}
+                  </Text>
+                </Pressable>
+                {editing ? (
+                  <Pressable
+                    onPress={() => onRemove(option.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${option.name}`}
+                    hitSlop={12}
+                    style={styles.removeBadge}
+                  >
+                    <Text style={styles.removeGlyph}>−</Text>
+                  </Pressable>
+                ) : null}
               </View>
-              <Text style={styles.tileName} numberOfLines={1}>
-                {option.name}
-              </Text>
-              <Text style={styles.tileNote} numberOfLines={2}>
-                {option.note ?? 'Filtered'}
-              </Text>
-            </Pressable>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.section}>
+          <Card>
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>No sites yet</Text>
+              <Text style={styles.emptyBody}>
+                Add the ones you actually use. Nothing is here to begin with on purpose — a list of
+                every social network is a list of suggestions, and this app is not here to make
+                any.
+              </Text>
+            </View>
+          </Card>
+        </View>
+      )}
+
+      {available.length > 0 ? (
+        <View style={styles.section}>
+          <SectionLabel>{chosen.length > 0 ? 'Add another' : 'Add a site'}</SectionLabel>
+          <Card>
+            {available.map((option, index) => (
+              <View key={option.id}>
+                {index > 0 ? <Separator /> : null}
+                <Pressable
+                  onPress={() => onAdd(option.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add ${option.name}`}
+                  style={({ pressed }) => [styles.addRow, pressed && styles.tilePressed]}
+                >
+                  <SiteBadge site={option} size={34} />
+                  <View style={styles.addRowText}>
+                    <Text style={styles.addName}>{option.name}</Text>
+                    {option.note ? <Text style={styles.addNote}>{option.note}</Text> : null}
+                  </View>
+                  <Text style={styles.addGlyph}>+</Text>
+                </Pressable>
+              </View>
+            ))}
+          </Card>
+        </View>
+      ) : null}
 
       {lockdown ? (
         <Text style={styles.footnote}>
-          Locked to these sites. Links that lead anywhere else are refused, and there is no address
-          bar. Turn this off in Filters to browse freely.
+          Locked to the sites you added. Links that lead anywhere else are refused, and there is
+          no address bar. Turn this off in Settings to browse freely.
         </Text>
       ) : (
         <View style={styles.section}>
@@ -365,8 +487,8 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: spacing.gutter, paddingTop: 22 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: {
-    width: '31.5%',
-    minHeight: 104,
+    width: '100%',
+    minHeight: 116,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -375,17 +497,44 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   tilePressed: { opacity: 0.6 },
-  tileIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.chip,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  tileSlot: { width: '31.5%' },
+  badge: { alignItems: 'center', justifyContent: 'center' },
+  badgeText: { fontWeight: '700', letterSpacing: 0.2 },
+  tileName: { ...type.row, color: colors.text },
+  tileNote: { fontSize: 11, lineHeight: 14, color: colors.textFaint },
+
+  editLink: { ...type.secondary, color: colors.accent },
+  removeBadge: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tileMonogram: { fontSize: 12, fontWeight: '700', color: colors.textDim, letterSpacing: 0.2 },
-  tileName: { ...type.secondary, color: colors.text },
-  tileNote: { fontSize: 11, lineHeight: 14, color: colors.textFaint },
+  removeGlyph: { fontSize: 19, lineHeight: 22, color: colors.text, fontWeight: '600' },
+
+  empty: { padding: spacing.gutter, gap: 8 },
+  emptyTitle: { ...type.row, color: colors.text },
+  emptyBody: { ...type.secondary, color: colors.textDim, lineHeight: 20 },
+
+  addRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: TOUCH_TARGET + 8,
+    paddingHorizontal: spacing.gutter,
+    paddingVertical: 10,
+  },
+  addRowText: { flex: 1, gap: 2 },
+  addName: { ...type.row, color: colors.text },
+  addNote: { fontSize: 12, lineHeight: 16, color: colors.textFaint },
+  addGlyph: { fontSize: 24, lineHeight: 26, color: colors.accent, fontWeight: '400' },
   footnote: {
     ...type.secondary,
     color: colors.textFaint,

@@ -47,6 +47,7 @@ export function Row({
   left,
   onPress,
   minHeight = 60,
+  prominent = false,
 }: {
   title: string;
   subtitle?: string;
@@ -54,13 +55,24 @@ export function Row({
   left?: React.ReactNode;
   onPress?: () => void;
   minHeight?: number;
+  /**
+   * For a row that is the screen's main choice rather than one setting among
+   * many. Sizes up the title only — every Text here scales with the reader's
+   * iOS text-size setting on top of this, which is the part that actually
+   * matters for anyone who has turned that up.
+   */
+  prominent?: boolean;
 }) {
   const content = (
     <View style={[styles.row, { minHeight }]}>
       {left}
       <View style={styles.rowText}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.rowTitle, prominent && styles.rowTitleProminent]}>{title}</Text>
+        {subtitle ? (
+          <Text style={[styles.rowSubtitle, prominent && styles.rowSubtitleProminent]}>
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
       {right}
     </View>
@@ -202,7 +214,9 @@ const styles = StyleSheet.create({
   },
   rowText: { flex: 1, gap: 3 },
   rowTitle: { ...type.row, color: colors.text },
+  rowTitleProminent: { fontSize: 20, lineHeight: 25, fontWeight: '600', letterSpacing: -0.2 },
   rowSubtitle: { ...type.secondary, color: colors.textDim },
+  rowSubtitleProminent: { fontSize: 15, lineHeight: 20 },
   pressed: { opacity: 0.6 },
   toggle: {
     width: 51,

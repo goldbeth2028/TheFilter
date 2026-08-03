@@ -31,6 +31,7 @@ export type SourceKind = 'rss' | 'reddit' | 'mastodon' | 'bluesky' | 'hackernews
 
 /** The things this app tries to notice. Every one is user-tunable. */
 export type Category =
+  | 'explicit'
   | 'toxicity'
   | 'outrage'
   | 'doom'
@@ -39,6 +40,7 @@ export type Category =
   | 'engagementBait';
 
 export const CATEGORIES: Category[] = [
+  'explicit',
   'toxicity',
   'outrage',
   'doom',
@@ -48,14 +50,32 @@ export const CATEGORIES: Category[] = [
 ];
 
 /**
+ * A zeroed counter for every category.
+ *
+ * Exists because this shape was hand-written in four places, and adding a
+ * category broke all four. The compiler caught it, but only after the fact —
+ * deriving it from CATEGORIES means there is nothing to forget.
+ */
+export function zeroByCategory(): Record<Category, number> {
+  const out = {} as Record<Category, number>;
+  for (const category of CATEGORIES) out[category] = 0;
+  return out;
+}
+
+/**
  * Row copy for the Filters screen: a plain label and one line of description,
  * matching the design doc's grouped-row format. Descriptions are written flat
  * and factual — no alarm language, per the design rules.
  */
 export const CATEGORY_META: Record<
   Category,
-  { label: string; blurb: string; group: 'negativity' | 'credibility' }
+  { label: string; blurb: string; group: 'safety' | 'negativity' | 'credibility' }
 > = {
+  explicit: {
+    label: 'Adult and graphic',
+    blurb: 'Sexual content, and violence shown in detail',
+    group: 'safety',
+  },
   toxicity: {
     label: 'Hostility',
     blurb: 'Insults, contempt, and abuse aimed at people',
@@ -166,7 +186,49 @@ export interface Settings {
    * "silently disappeared" — you always know how many and can turn it off.
    */
   browseRemoves: boolean;
+  /**
+   * Which site tiles appear in Browse, in the order they were added.
+   *
+   * Empty to begin with, on purpose. A launcher pre-filled with every social
+   * network is a list of suggestions, and suggesting TikTok to someone who came
+   * here to use less of it is the opposite of the job. You add what you want.
+   */
+  enabledSiteIds: string[];
+  /**
+   * One dial instead of a screen of them. Simple mode maps a single protection
+   * level onto every category, and hides the per-category controls.
+   */
+  simpleMode: boolean;
+  /** The level simple mode is set to. Ignored when simpleMode is false. */
+  protection: ProtectionLevel;
 }
+
+/**
+ * The three settings a simple-mode user chooses between.
+ *
+ * Named for who they are for rather than how hard they filter, because
+ * "strict" and "balanced" mean nothing to someone setting up a phone for a
+ * child — and the honest question is always "who is holding this".
+ */
+export type ProtectionLevel = 'child' | 'calm' | 'light';
+
+export const PROTECTION_META: Record<
+  ProtectionLevel,
+  { label: string; blurb: string }
+> = {
+  child: {
+    label: 'For a child',
+    blurb: 'Adult, graphic, hostile and false content is hidden',
+  },
+  calm: {
+    label: 'Calm feed',
+    blurb: 'Hides the worst of it, leaves ordinary posts alone',
+  },
+  light: {
+    label: 'Light touch',
+    blurb: 'Adds a note to flagged posts, hides nothing',
+  },
+};
 
 export interface SourceConfig {
   id: string;

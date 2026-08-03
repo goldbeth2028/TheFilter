@@ -10,7 +10,14 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { DEFAULT_SETTINGS } from '../filter/engine';
 import { DEFAULT_SOURCES } from '../sources/fetchers';
-import { CATEGORIES, type Category, type Settings, type SourceConfig } from '../types';
+import {
+  CATEGORIES,
+  type Category,
+  type ProtectionLevel,
+  type Settings,
+  type SourceConfig,
+  zeroByCategory,
+} from '../types';
 
 export interface Stats {
   /** Times each category triggered a blur or collapse. */
@@ -53,14 +60,7 @@ export function lastSevenDays(stats: Stats): Array<{ key: string; label: string;
 
 function emptyStats(): Stats {
   return {
-    hiddenByCategory: {
-      toxicity: 0,
-      outrage: 0,
-      doom: 0,
-      conspiracy: 0,
-      misinfo: 0,
-      engagementBait: 0,
-    },
+    hiddenByCategory: zeroByCategory(),
     revealed: 0,
     disagreed: 0,
     screened: 0,
@@ -79,6 +79,10 @@ interface SettingsState {
   setSensitivity: (category: Category, value: number) => void;
   setMaxHiddenRatio: (value: number) => void;
   setQuickReveal: (value: boolean) => void;
+  setSimpleMode: (value: boolean) => void;
+  setProtection: (level: ProtectionLevel) => void;
+  addSite: (id: string) => void;
+  removeSite: (id: string) => void;
   setLockdownBrowsing: (value: boolean) => void;
   setBrowseRemoves: (value: boolean) => void;
   setLlmEnabled: (value: boolean) => void;
@@ -118,6 +122,26 @@ export const useSettings = create<SettingsState>()(
 
       setMaxHiddenRatio: (value) => set((s) => ({ settings: { ...s.settings, maxHiddenRatio: value } })),
       setQuickReveal: (value) => set((s) => ({ settings: { ...s.settings, quickReveal: value } })),
+      setSimpleMode: (value) => set((s) => ({ settings: { ...s.settings, simpleMode: value } })),
+      setProtection: (level) => set((s) => ({ settings: { ...s.settings, protection: level } })),
+
+      // Order is arrival order: the launcher reads as a list you built, not a
+      // list we sorted for you.
+      addSite: (id) =>
+        set((s) =>
+          s.settings.enabledSiteIds.includes(id)
+            ? s
+            : { settings: { ...s.settings, enabledSiteIds: [...s.settings.enabledSiteIds, id] } },
+        ),
+
+      removeSite: (id) =>
+        set((s) => ({
+          settings: {
+            ...s.settings,
+            enabledSiteIds: s.settings.enabledSiteIds.filter((existing) => existing !== id),
+          },
+        })),
+
       setLockdownBrowsing: (value) =>
         set((s) => ({ settings: { ...s.settings, lockdownBrowsing: value } })),
       setBrowseRemoves: (value) =>
@@ -207,19 +231,7 @@ export const useSettings = create<SettingsState>()(
       name: 'thefilter/settings',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
-      // Merge rather than replace, so a settings shape added in a later version
-      // doesn't come back undefined for someone upgrading.
-      merge: (persisted, current) => {
-        const saved = persisted as Partial<SettingsState> | undefined;
-        if (!saved) return current;
-        return {
-          ...current,
-          ...saved,
-          settings: { ...DEFAULT_SETTINGS, ...saved.settings },
-          stats: { ...emptyStats(), ...saved.stats },
-          sources: saved.sources?.length ? saved.sources : DEFAULT_SOURCES,
-        };
-      },
+      merge: (persisted, current) => mergePersisted(persisted, current as SettingsState),
       onRehydrateStorage: () => (state) => {
         state?.markHydrated();
       },
@@ -231,6 +243,40 @@ export const useSettings = create<SettingsState>()(
     },
   ),
 );
+
+/**
+ * Folds a saved blob into the current defaults.
+ *
+ * Exported so it can be tested, because the failure it guards against is
+ * invisible in development: everything here is written by a *previous* version
+ * of the app, and the fields that matter are the ones that did not exist then.
+ *
+ * A shallow spread is not enough. `sensitivity` and `hiddenByCategory` are
+ * keyed by category, so a save written before a category existed has no key for
+ * it — and spreading that over the defaults puts `undefined` back where a
+ * number belongs. For sensitivity that reads as "never filter", so a new safety
+ * category would arrive switched off and silent. Nested records get merged key
+ * by key for exactly that reason.
+ */
+export function mergePersisted(persisted: unknown, current: SettingsState): SettingsState {
+  const saved = persisted as Partial<SettingsState> | undefined;
+  if (!saved) return current;
+  return {
+    ...current,
+    ...saved,
+    settings: {
+      ...DEFAULT_SETTINGS,
+      ...saved.settings,
+      sensitivity: { ...DEFAULT_SETTINGS.sensitivity, ...saved.settings?.sensitivity },
+    },
+    stats: {
+      ...emptyStats(),
+      ...saved.stats,
+      hiddenByCategory: { ...zeroByCategory(), ...saved.stats?.hiddenByCategory },
+    },
+    sources: saved.sources?.length ? saved.sources : DEFAULT_SOURCES,
+  };
+}
 
 /** Categories currently at their most aggressive setting — surfaced in Stats. */
 export function aggressiveCategories(settings: Settings): Category[] {

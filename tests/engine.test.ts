@@ -9,7 +9,15 @@ import {
   screenBatch,
   thresholdFor,
 } from '../src/filter/engine';
-import type { Post, Settings } from '../src/types';
+import { CATEGORIES, type Category, type Post, type Settings } from '../src/types';
+
+/** Every category at the same sensitivity — keeps tests honest when one is added. */
+function atEvery(value: number): Record<Category, number> {
+  const out = {} as Record<Category, number>;
+  for (const category of CATEGORIES) out[category] = value;
+  return out;
+}
+
 
 let counter = 0;
 function post(text: string, extra: Partial<Post> = {}): Post {
@@ -26,8 +34,13 @@ function post(text: string, extra: Partial<Post> = {}): Post {
   };
 }
 
+/**
+ * Advanced settings by default. These tests drive `mode` and per-category
+ * sensitivity directly, which is exactly what simple mode overrides — so they
+ * opt out of it. The presets get their own block at the bottom.
+ */
 function settings(overrides: Partial<Settings> = {}): Settings {
-  return { ...DEFAULT_SETTINGS, ...overrides };
+  return { ...DEFAULT_SETTINGS, simpleMode: false, ...overrides };
 }
 
 describe('analyze', () => {
@@ -251,10 +264,111 @@ describe('switching a category off', () => {
   it('with every category off, nothing is ever acted on', () => {
     const allOff = settings({
       mode: 'strict',
-      sensitivity: { toxicity: 0, outrage: 0, doom: 0, conspiracy: 0, misinfo: 0, engagementBait: 0 },
+      sensitivity: atEvery(0),
     });
     for (const [, sample] of MUST_FLAG_SAMPLES) {
       expect(screen(sample, allOff).decision.action).toBe('allow');
+    }
+  });
+});
+
+describe('adult and graphic content', () => {
+  it('flags adult solicitation', () => {
+    const result = screen(post('Check my onlyfans, link in bio for the spicy stuff. 18+ content only.'), settings());
+    expect(result.analysis.topCategory).toBe('explicit');
+    expect(result.decision.action).not.toBe('allow');
+  });
+
+  it('flags graphic violence', () => {
+    const result = screen(
+      post('Graphic warning: execution video going around, you can watch him die, absolutely brutal.'),
+      settings(),
+    );
+    expect(result.analysis.scores.explicit).toBeGreaterThan(0.6);
+  });
+
+  it('is not softened by good sourcing, unlike a factual claim', () => {
+    const sourced = analyze(
+      post('According to a Reuters report, the beheading footage was verified. https://www.reuters.com/x',
+        { links: ['https://www.reuters.com/x'] }),
+      settings(),
+    );
+    const bare = analyze(post('the beheading footage was verified'), settings());
+    expect(sourced.scores.explicit).toBeCloseTo(bare.scores.explicit, 5);
+  });
+
+  /**
+   * This category defaults high and is the one a parent turns up, so the cost
+   * of a false positive is a filter that eats ordinary sentences. Everything
+   * below has to score exactly zero even with the dial at maximum.
+   */
+  const INNOCENT = [
+    'The sex education curriculum was approved by the school board on Tuesday.',
+    'Researchers found sex differences in how the drug is metabolised.',
+    'The gallery is showing a nude by Modigliani alongside three landscapes.',
+    'We watched a documentary about the graphic design of the London Underground.',
+    'The escort vehicle led the convoy through the tunnel at walking pace.',
+    'Food porn, honestly — that lasagne was the best thing I ate all year.',
+    'He was brutally honest about the budget and everyone respected him for it.',
+    'Blood tests came back normal, which is a relief after all that worrying.',
+  ];
+
+  for (const text of INNOCENT) {
+    it(`leaves alone: ${text.slice(0, 44)}...`, () => {
+      const maxed = settings({
+        mode: 'strict',
+        sensitivity: { ...DEFAULT_SETTINGS.sensitivity, explicit: 100 },
+      });
+      expect(screen(post(text), maxed).analysis.scores.explicit).toBe(0);
+    });
+  }
+});
+
+describe('simple mode', () => {
+  const nasty = () =>
+    post('Doctors hate this: one simple root cures cancer in weeks. 100% proven, big pharma hides it.');
+  const ordinary = () =>
+    post(
+      'The transit authority approved the new bus lane on Tuesday. According to the agency ' +
+        'report, service should begin in March.',
+    );
+
+  it('ignores the stored dials in favour of the chosen level', () => {
+    // Dials that would allow everything, overridden by a level that does not.
+    const s = settings({ simpleMode: true, protection: 'child', mode: 'off', sensitivity: atEvery(0) });
+    expect(screen(nasty(), s).decision.action).not.toBe('allow');
+  });
+
+  it('hands the dials back untouched when simple mode is switched off', () => {
+    const stored = settings({ simpleMode: false, mode: 'off', sensitivity: atEvery(0) });
+    expect(screen(nasty(), stored).decision.action).toBe('allow');
+  });
+
+  it('gets stricter as the level rises', () => {
+    const rank = { allow: 0, label: 1, blur: 2, collapse: 3 };
+    const light = screen(nasty(), settings({ simpleMode: true, protection: 'light' })).decision.action;
+    const calm = screen(nasty(), settings({ simpleMode: true, protection: 'calm' })).decision.action;
+    const child = screen(nasty(), settings({ simpleMode: true, protection: 'child' })).decision.action;
+    expect(rank[light]).toBeLessThanOrEqual(rank[calm]);
+    expect(rank[calm]).toBeLessThanOrEqual(rank[child]);
+  });
+
+  it('hides nothing at the lightest level', () => {
+    const light = settings({ simpleMode: true, protection: 'light' });
+    expect(['allow', 'label']).toContain(screen(nasty(), light).decision.action);
+  });
+
+  it('leaves ordinary posts alone even at the child level', () => {
+    const child = settings({ simpleMode: true, protection: 'child' });
+    expect(screen(ordinary(), child).decision.action).toBe('allow');
+  });
+
+  it('hides adult content at every level, including the lightest', () => {
+    const adult = post('Check my onlyfans, link in bio for the spicy stuff, 18+ content only.');
+    for (const protection of ['light', 'calm', 'child'] as const) {
+      const result = screen(adult, settings({ simpleMode: true, protection }));
+      expect(result.decision.action).not.toBe('allow');
+      expect(result.decision.category).toBe('explicit');
     }
   });
 });

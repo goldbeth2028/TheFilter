@@ -167,9 +167,16 @@ try {
 
   text = await openTab('Filters');
   check(
-    'Filters renders',
-    /What to filter/.test(text) && /Unverified claims/.test(text) && /Strength/.test(text),
+    'Filters opens in simple mode, asking one question',
+    /Who is this for\?/.test(text) &&
+      /For a child/.test(text) &&
+      /Calm feed/.test(text) &&
+      /Light touch/.test(text),
     '',
+  );
+  check(
+    'Simple mode hides the expert controls',
+    !/Unverified claims/.test(text) && !/Second opinion/.test(text) && !/Muted phrases/.test(text),
   );
   shots.push(await shot('2-filters'));
 
@@ -217,9 +224,41 @@ try {
   await app().click('text="Close"');
   await page.waitForTimeout(300);
 
-  /* ---------------------------------------- 3. a Filters toggle re-screens it */
+  /* -------------------------- 3. simple mode: one choice changes the whole feed */
 
   await openTab('Filters');
+  await app().click('text="For a child"');
+  await page.waitForTimeout(400);
+  const childSaved = await page.evaluate(() => window.localStorage.getItem('thefilter/settings'));
+  check(
+    'Choosing a protection level persists it',
+    JSON.parse(childSaved ?? '{}').state?.settings?.protection === 'child',
+    JSON.parse(childSaved ?? '{}').state?.settings?.protection,
+  );
+
+  text = await openTab('Feed');
+  const strict = /(\d+) of (\d+) posts covered/.exec(text);
+  check(
+    'The child level covers at least as much as the calm one',
+    !!strict && !!before && Number(strict[1]) >= Number(before[1]),
+    `${before?.[0] ?? '?'} -> ${strict?.[0] ?? '?'}`,
+  );
+
+  await openTab('Filters');
+  await app().click('text="Calm feed"');
+  await page.waitForTimeout(300);
+
+  /* ------------------------- 3b. the advanced screen is still one tap away */
+
+  await app().click('text="Advanced settings"');
+  await page.waitForTimeout(400);
+  text = await visibleText();
+  check(
+    'Advanced settings reveals the per-category dials',
+    /What to filter/.test(text) && /Unverified claims/.test(text) && /Strength/.test(text),
+    '',
+  );
+
   await app().click('[role="switch"][aria-label="Unverified claims"]');
   await page.waitForTimeout(300);
 
@@ -242,10 +281,34 @@ try {
   // Put it back so the screenshots above stay representative of defaults.
   await openTab('Filters');
   await app().click('[role="switch"][aria-label="Unverified claims"]');
+  await page.waitForTimeout(200);
+  await app().click('text="Back to the simple screen"');
+  await page.waitForTimeout(300);
 
   /* ------------------------------- 4. the Browse stand-in filters a real page */
 
   text = await openTab('Browse');
+  check(
+    'Browse starts with no sites, and says why',
+    /No sites yet/.test(text) && /Add a site/.test(text) && !/Your sites/.test(text),
+    '',
+  );
+
+  await app().click('[aria-label="Add Bluesky"]');
+  await page.waitForTimeout(400);
+  text = await visibleText();
+  check(
+    'Adding a site puts it on the launcher',
+    /Your sites/.test(text) && /Bluesky/.test(text),
+    '',
+  );
+  const savedSites = await page.evaluate(() => window.localStorage.getItem('thefilter/settings'));
+  check(
+    'The chosen site is persisted',
+    JSON.stringify(JSON.parse(savedSites ?? '{}').state?.settings?.enabledSiteIds) === '["bluesky"]',
+    JSON.stringify(JSON.parse(savedSites ?? '{}').state?.settings?.enabledSiteIds),
+  );
+
   await app().click('[aria-label="Open Bluesky"]');
   await page.waitForTimeout(400);
   text = await visibleText();

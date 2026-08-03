@@ -12,7 +12,15 @@
 
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS, screen } from '../src/filter/engine';
-import type { Post } from '../src/types';
+import { CATEGORIES, type Category, type Post } from '../src/types';
+
+/** Every category at the same sensitivity — keeps tests honest when one is added. */
+function atEvery(value: number): Record<Category, number> {
+  const out = {} as Record<Category, number>;
+  for (const category of CATEGORIES) out[category] = value;
+  return out;
+}
+
 
 let n = 0;
 function post(text: string, links: string[] = []): Post {
@@ -140,14 +148,7 @@ describe('calibration — must not act', () => {
     const maxed = {
       ...settings,
       mode: 'strict' as const,
-      sensitivity: {
-        toxicity: 100,
-        outrage: 100,
-        doom: 100,
-        conspiracy: 100,
-        misinfo: 100,
-        engagementBait: 100,
-      },
+      sensitivity: atEvery(100),
     };
     const distress = post(
       "I can't stop crying and I feel like everything is falling apart. I don't know who else " +

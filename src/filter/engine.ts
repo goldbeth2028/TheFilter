@@ -18,14 +18,17 @@ import {
   type Decision,
   type Evidence,
   type Post,
+  type ProtectionLevel,
   type ScreenedPost,
   type Settings,
+  zeroByCategory,
 } from '../types';
 import {
   detectConspiracy,
   detectCredibility,
   detectDoom,
   detectEngagementBait,
+  detectExplicit,
   detectHostility,
   detectMisinfoRisk,
   detectMutedPhrases,
@@ -39,6 +42,9 @@ import { clamp01, extractLinks, normalize, stripHtml } from './text';
  * discounted at all — a well-sourced insult is still an insult.
  */
 const CREDIBILITY_DISCOUNT: Record<Category, number> = {
+  // Sourcing says nothing about whether something is explicit. A reputable
+  // outlet's graphic war footage is still graphic.
+  explicit: 0,
   toxicity: 0,
   outrage: 0.15,
   doom: 0.1,
@@ -47,9 +53,76 @@ const CREDIBILITY_DISCOUNT: Record<Category, number> = {
   engagementBait: 0.1,
 };
 
+/**
+ * What each simple-mode level actually does.
+ *
+ * Simple mode is not a cut-down engine — it is the same engine with the dials
+ * set for you. Keeping the mapping here, next to the thresholds it feeds,
+ * means the two can never drift into disagreeing.
+ *
+ * "For a child" leans hard on the safety and credibility categories and only
+ * moderately on tone, because a child seeing an argument is not the same order
+ * of problem as a child seeing pornography.
+ */
+export const PROTECTION_PRESETS: Record<
+  ProtectionLevel,
+  { mode: Settings['mode']; sensitivity: Record<Category, number> }
+> = {
+  child: {
+    mode: 'strict',
+    sensitivity: {
+      explicit: 95,
+      toxicity: 85,
+      outrage: 70,
+      doom: 60,
+      conspiracy: 85,
+      misinfo: 80,
+      engagementBait: 70,
+    },
+  },
+  calm: {
+    mode: 'balanced',
+    sensitivity: {
+      explicit: 80,
+      toxicity: 65,
+      outrage: 55,
+      doom: 40,
+      conspiracy: 70,
+      misinfo: 60,
+      engagementBait: 50,
+    },
+  },
+  light: {
+    mode: 'label',
+    sensitivity: {
+      explicit: 75,
+      toxicity: 55,
+      outrage: 45,
+      doom: 35,
+      conspiracy: 60,
+      misinfo: 50,
+      engagementBait: 45,
+    },
+  },
+};
+
+/**
+ * The settings the engine should actually use.
+ *
+ * In simple mode the stored per-category values are ignored in favour of the
+ * chosen preset. Nothing is overwritten on disk, so turning simple mode off
+ * hands back exactly the dials the user had before.
+ */
+export function effectiveSettings(settings: Settings): Settings {
+  if (!settings.simpleMode) return settings;
+  const preset = PROTECTION_PRESETS[settings.protection];
+  return { ...settings, mode: preset.mode, sensitivity: preset.sensitivity };
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   mode: 'balanced',
   sensitivity: {
+    explicit: 80,
     toxicity: 65,
     outrage: 55,
     doom: 40,
@@ -65,18 +138,10 @@ export const DEFAULT_SETTINGS: Settings = {
   quickReveal: false,
   lockdownBrowsing: true,
   browseRemoves: false,
+  enabledSiteIds: [],
+  simpleMode: true,
+  protection: 'calm',
 };
-
-function emptyScores(): Record<Category, number> {
-  return {
-    toxicity: 0,
-    outrage: 0,
-    doom: 0,
-    conspiracy: 0,
-    misinfo: 0,
-    engagementBait: 0,
-  };
-}
 
 /** Folds independent weights with diminishing returns; order-independent. */
 function fold(weights: number[]): number {
@@ -118,6 +183,7 @@ export function analyze(post: Post, settings: Settings): Analysis {
   const credibility = credibilitySignal.score;
 
   const signals = [
+    detectExplicit(input),
     detectHostility(input),
     detectOutrage(input),
     detectDoom(input),
@@ -134,7 +200,7 @@ export function analyze(post: Post, settings: Settings): Analysis {
     ...credibilitySignal.evidence.filter(isCredibilityEvidence),
   ];
 
-  const scores = emptyScores();
+  const scores = zeroByCategory();
   for (const category of CATEGORIES) {
     const weights = evidence
       .filter((e) => e.category === category && !isCredibilityEvidence(e))
@@ -195,6 +261,7 @@ function capAction(action: Action, mode: Settings['mode']): Action {
  * leading the shield — a percentage reads as a verdict, and this isn't one.
  */
 const OPENERS: Record<Category, string> = {
+  explicit: 'This post is adult or graphic',
   toxicity: 'This post is written to demean someone',
   outrage: 'This post is framed to provoke anger',
   doom: 'This post frames things as beyond repair',
@@ -260,8 +327,9 @@ export function decide(analysis: Analysis, settings: Settings): Decision {
 }
 
 export function screen(post: Post, settings: Settings): ScreenedPost {
-  const analysis = analyze(post, settings);
-  return { post, analysis, decision: decide(analysis, settings) };
+  const effective = effectiveSettings(settings);
+  const analysis = analyze(post, effective);
+  return { post, analysis, decision: decide(analysis, effective) };
 }
 
 /**

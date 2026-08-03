@@ -171,6 +171,7 @@ npm run simulator:build    # just build into dist/
 npm run simulator:serve    # just serve an existing build
 npm run verify:simulator   # drive the built simulator in real Chromium
 npm run verify:detector    # run the WebView content script against real DOM shapes
+npm run verify:preview     # drive the packed single-file preview
 ```
 
 Open `http://localhost:8080/` and the app is there, in an iPhone-shaped frame at

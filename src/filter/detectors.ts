@@ -16,7 +16,9 @@ import {
   CREDIBILITY,
   DOOM,
   ENGAGEMENT_BAIT,
+  EXPLICIT,
   FINANCIAL_HYPE,
+  GRAPHIC,
   HEALTH_CLAIMS,
   HOSTILITY,
   OPAQUE_DOMAINS,
@@ -176,6 +178,33 @@ export function detectConspiracy(input: DetectorInput): Signal {
   }
 
   return { score, evidence };
+}
+
+/**
+ * "-porn" as the English idiom for indulgent imagery of a subject: food porn,
+ * ruin porn, property porn. Nothing sexual about any of them, and a filter that
+ * covers someone's lasagne photo is a filter people switch off. Masked before
+ * matching rather than excluded in the pattern, because the alternative is a
+ * lookbehind and this codebase avoids those for Hermes.
+ */
+const IDIOMATIC_PORN =
+  /\b(food|poverty|ruin|disaster|property|real ?estate|war|misery|trauma|grief|nature|architecture|productivity|gear|book ?shelf|plant) porn\b/g;
+
+/**
+ * Adult material and graphic violence.
+ *
+ * Two banks, one category: a parent turning this on means "not that sort of
+ * thing", and does not want to reason about whether it was the sexual sort or
+ * the bloody sort. The notes stay specific so the Why panel still says which.
+ */
+export function detectExplicit(input: DetectorInput): Signal {
+  const masked = { ...input, norm: input.norm.replace(IDIOMATIC_PORN, ' ') };
+  const adult = scanPatterns(masked, EXPLICIT, 'explicit', 'explicit-lexicon');
+  const graphic = scanPatterns(masked, GRAPHIC, 'explicit', 'graphic-lexicon');
+  return {
+    score: clamp01(1 - (1 - adult.score) * (1 - graphic.score)),
+    evidence: [...adult.evidence, ...graphic.evidence],
+  };
 }
 
 export function detectEngagementBait(input: DetectorInput): Signal {
