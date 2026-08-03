@@ -231,6 +231,11 @@ export function decide(analysis: Analysis, settings: Settings): Decision {
   let best: Decision = { action: 'allow', score: analysis.topScore, reason: 'Nothing flagged.' };
 
   for (const category of CATEGORIES) {
+    // Sensitivity 0 means the user switched this category off, and off has to
+    // mean off. Without this it only means "threshold 0.95", so an extreme post
+    // still gets labelled by a category the Filters screen shows as disabled.
+    if (settings.sensitivity[category] <= 0) continue;
+
     const score = analysis.scores[category];
     const threshold = thresholdFor(settings.sensitivity[category]);
 

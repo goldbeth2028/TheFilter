@@ -216,3 +216,51 @@ describe('bubble guard', () => {
     }
   });
 });
+
+describe('switching a category off', () => {
+  /**
+   * Regression: "off" used to mean sensitivity 0, and `thresholdFor(0)` is 0.95
+   * — so a post scoring above that was still acted on by a category the Filters
+   * screen showed as disabled. A toggle labelled off has to mean off.
+   */
+  const extreme = () =>
+    post(
+      'Doctors hate this: one simple root cures cancer in weeks. Big pharma is hiding it ' +
+        'because they lose money when you get better. 100% proven, undeniable, irrefutable.',
+    );
+
+  it('acts on the post while the category is on', () => {
+    const result = screen(extreme(), settings());
+    expect(result.decision.action).not.toBe('allow');
+    expect(result.decision.category).toBe('misinfo');
+  });
+
+  it('does nothing at all once that category is off, however high it scores', () => {
+    const off = settings({ sensitivity: { ...DEFAULT_SETTINGS.sensitivity, misinfo: 0 } });
+    const result = screen(extreme(), off);
+    expect(result.analysis.scores.misinfo).toBeGreaterThan(0.9);
+    expect(result.decision.action).toBe('allow');
+  });
+
+  it('still lets other categories act', () => {
+    const off = settings({ sensitivity: { ...DEFAULT_SETTINGS.sensitivity, misinfo: 0 } });
+    const nasty = post('You are a worthless pathetic moron and everyone who agrees is scum.');
+    expect(screen(nasty, off).decision.category).toBe('toxicity');
+  });
+
+  it('with every category off, nothing is ever acted on', () => {
+    const allOff = settings({
+      mode: 'strict',
+      sensitivity: { toxicity: 0, outrage: 0, doom: 0, conspiracy: 0, misinfo: 0, engagementBait: 0 },
+    });
+    for (const [, sample] of MUST_FLAG_SAMPLES) {
+      expect(screen(sample, allOff).decision.action).toBe('allow');
+    }
+  });
+});
+
+const MUST_FLAG_SAMPLES: Array<[string, Post]> = [
+  ['cure', post('Doctors hate this: one simple root cures cancer in weeks. 100% proven.')],
+  ['abuse', post('You are a worthless pathetic moron and everyone who agrees with you is scum.')],
+  ['conspiracy', post("WAKE UP. They don't want you to know. Do your own research before it is deleted!!!")],
+];

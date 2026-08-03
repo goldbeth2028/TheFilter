@@ -16,7 +16,8 @@
     "simulator": "node scripts/build-simulator.mjs && node scripts/serve-simulator.mjs",
     "simulator:build": "node scripts/build-simulator.mjs",
     "simulator:serve": "node scripts/serve-simulator.mjs",
-    "verify:simulator": "node scripts/verify-simulator.mjs"
+    "verify:simulator": "node scripts/verify-simulator.mjs",
+    "preview": "node scripts/build-simulator.mjs && node scripts/build-preview.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
