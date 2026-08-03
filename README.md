@@ -316,8 +316,14 @@ xcrun safari-web-extension-converter extension/dist --project-location ./safari
 ```
 
 That emits an Xcode project; build and run it, then enable the extension in
-Safari's settings and allow it on the sites you want filtered. This is the only
-route that filters a real feed without a phone in the loop at all.
+Safari's settings and allow it on the sites you want filtered.
+
+The same project builds for iPhone. In Xcode pick an iOS destination instead of
+My Mac, run it, then on the phone: Settings -> Apps -> Safari -> Extensions ->
+The Filter -> on, and set the site permissions to Always Allow. From then on
+instagram.com in Safari is filtered on the device itself. It does not touch the
+Instagram app — nothing can — so this only helps if you are willing to read the
+site in Safari instead.
 
 `npm run web` starts the Expo dev server for web instead, with fast refresh — the
 same bundle as the simulator but at full window size, with no phone frame around
