@@ -8,6 +8,7 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0C0E10"
     },
@@ -17,19 +18,13 @@
       "infoPlist": {
         "NSUserActivityTypes": [
           "INSendMessageIntent"
-        ],
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "thefilter"
-            ]
-          }
         ]
       }
     },
     "android": {
       "package": "com.thefilter.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0C0E10"
       },
       "intentFilters": [
@@ -48,10 +43,12 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "icon": "./assets/icon.png"
   }
 }

@@ -12,3 +12,5 @@ npm-debug.*
 *.mobileprovision
 .env
 .env.local
+ios/
+android/

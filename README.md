@@ -287,7 +287,17 @@ npx expo run:ios            # prebuilds ios/, pods, builds, boots the Simulator
 
 Xcode and CocoaPods have to be installed; the first build takes a while and
 later ones are quick. `ios/` is generated, not committed — `expo prebuild` owns
-it, so edit `app.json` rather than the Xcode project.
+it, so edit `app.json` rather than the Xcode project. To open it in Xcode
+instead of letting the CLI drive:
+
+```sh
+npx expo prebuild --platform ios   # writes ios/
+cd ios && pod install
+open TheFilter.xcworkspace         # the workspace, not the project
+```
+
+Pick a simulator and hit run. The JS still comes from `npx expo start`, so
+leave that running in another tab.
 
 Then open Browse, pick a site, and sign in as you normally would. The WebView
 keeps its own cookie jar, so the session lives in the app and is not shared with
