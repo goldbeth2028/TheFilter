@@ -286,7 +286,9 @@ npx expo run:ios            # prebuilds ios/, pods, builds, boots the Simulator
 ```
 
 Xcode and CocoaPods have to be installed; the first build takes a while and
-later ones are quick. `ios/` is generated, not committed — `expo prebuild` owns
+later ones are quick. The project tracks the current Expo SDK deliberately —
+React Native's iOS build breaks against Xcode releases newer than the SDK
+expects, and chasing that with Podfile patches is a losing game. `ios/` is generated, not committed — `expo prebuild` owns
 it, so edit `app.json` rather than the Xcode project. To open it in Xcode
 instead of letting the CLI drive:
 
@@ -298,17 +300,6 @@ open TheFilter.xcworkspace         # the workspace, not the project
 
 Pick a simulator and hit run. The JS still comes from `npx expo start`, so
 leave that running in another tab.
-
-If a build fails in `ios/Pods/fmt/include/fmt/format-inl.h` with *call to
-consteval function ... is not a constant expression*, that is React Native
-0.76 pinning fmt 11.0.2 and compiling it as C++20, which Clang rejects from
-Xcode 16.3 onwards. `plugins/with-fmt-cxx17.js` compiles that one pod as C++17,
-where fmt's own guard disables the consteval path. It runs during prebuild, so
-a stale `ios/` predating it needs regenerating:
-
-```sh
-npx expo prebuild --platform ios --clean
-```
 
 Then open Browse, pick a site, and sign in as you normally would. The WebView
 keeps its own cookie jar, so the session lives in the app and is not shared with

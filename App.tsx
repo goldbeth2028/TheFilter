@@ -80,6 +80,8 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  screen: { ...StyleSheet.absoluteFillObject },
+  // Written out rather than spread from StyleSheet.absoluteFillObject, which
+  // React Native 0.86 dropped. These four properties are all it ever was.
+  screen: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   hidden: { opacity: 0, zIndex: -1 },
 });

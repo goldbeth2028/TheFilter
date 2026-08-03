@@ -6,12 +6,6 @@
     "orientation": "portrait",
     "scheme": "thefilter",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0C0E10"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thefilter.app",
@@ -48,7 +42,14 @@
     },
     "plugins": [
       "expo-asset",
-      "./plugins/with-fmt-cxx17"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0C0E10"
+        }
+      ]
     ],
     "icon": "./assets/icon.png"
   }
